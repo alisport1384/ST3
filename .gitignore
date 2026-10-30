@@ -21,4 +21,4 @@ scenario/__pycache__/
 out/
 
 # دیتاست‌ها در Release می‌مانند، نه در مخزن (tools/fetch_datasets.sh)
-datasets/*.csv.gz
+local-data/*.csv.gz

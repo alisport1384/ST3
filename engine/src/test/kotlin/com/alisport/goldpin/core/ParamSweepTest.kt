@@ -25,14 +25,14 @@ class ParamSweepTest {
     private companion object {
         /**
          * دیتاست با `SWEEP_DATA` انتخاب می‌شود (`1y` پیش‌فرض؛ `2y` / `3y` / `10y`).
-         * همه از `datasets/` ریپو خوانده می‌شوند — همان فایل‌هایی که اپ دانلود می‌کند.
+         * همه از `local-data/` ریپو خوانده می‌شوند — همان فایل‌هایی که اپ دانلود می‌کند.
          */
         fun dataTag(): String = System.getenv("SWEEP_DATA")?.takeIf { it.isNotBlank() } ?: "1y"
 
         fun dataFile(tag: String = dataTag()): File? = listOf(
-            "datasets/goldpin_xauusd_m1_$tag.csv.gz",
-            "../datasets/goldpin_xauusd_m1_$tag.csv.gz",
-            "/home/user/ST2new/datasets/goldpin_xauusd_m1_$tag.csv.gz"
+            "local-data/goldpin_xauusd_m1_$tag.csv.gz",
+            "../local-data/goldpin_xauusd_m1_$tag.csv.gz",
+
         ).map(::File).firstOrNull { it.exists() }
 
         /**

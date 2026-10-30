@@ -4,9 +4,9 @@
 import base64, csv, os
 from datetime import datetime, timezone
 
-OUT = "/home/user/ST2work/out/cx20y"
-PNG = "/home/user/ST2work/docs/cx20y_v1.4.52.png"
-DST = "/home/user/ST2work/docs/GOZARESH-AZMAYESH-CX-20Y-v1.4.52.html"
+OUT = "out/cx20y"
+PNG = "docs/cx20y_v1.4.52.png"
+DST = "docs/GOZARESH-AZMAYESH-CX-20Y-v1.4.52.html"
 
 FA = {"B1-L0": "پایهٔ ۱٫۴٫۵۱ (cx=0)", "FINAL-defaults": "پیکربندی نهایی (پیش‌فرض ۱٫۴٫۵۲)"}
 
@@ -127,7 +127,7 @@ html = f"""<!DOCTYPE html>
 </style></head><body>
 
 <h1>گزارش آزمون ۲۰سالهٔ موتور ترکیبی — GoldPin v1.4.52</h1>
-<p><small>تاریخ اجرا: ۵ آبان ۱۴۰۵ (2026-10-26) · داده: <code>datasets/goldpin_xauusd_m1_20y.csv.gz</code>
+<p><small>تاریخ اجرا: ۵ آبان ۱۴۰۵ (2026-10-26) · داده: <code>local-data/goldpin_xauusd_m1_20y.csv.gz</code>
 (۶٬۵۶۳٬۷۲۳ کندل M1، ۲۰۰۶-۰۸-۲۱ تا ۲۰۲۶-۰۸-۲۰، SHA-256 <code>ffbc7c1b…c830c9</code>) ·
 کمیسیون ۰٫۷ در همهٔ اجراها · هیچ اجرایی حذف نشده است.</small></p>
 
@@ -268,7 +268,7 @@ html = f"""<!DOCTYPE html>
 <h3>بازتولید</h3>
 <p><code>./run_cx.sh specs_stage4.txt</code> یا تک‌اجرا:</p>
 <p><code>java -Xmx1050m -XX:+UseSerialGC -cp "cli/build/install/cli/lib/*" com.alisport.goldpin.cli.OptimizeKt
---data datasets/goldpin_xauusd_m1_20y.csv.gz --spec "s=1,mm=2,k=7,b=1800,N=80,eb=-2,cmsn=0.7,hFrom=5,hTo=15,atrPct=0.25,mgmt=1,tag=FINAL" --out out/cx20y/FINAL.csv</code></p>
+--data local-data/goldpin_xauusd_m1_20y.csv.gz --spec "s=1,mm=2,k=7,b=1800,N=80,eb=-2,cmsn=0.7,hFrom=5,hTo=15,atrPct=0.25,mgmt=1,tag=FINAL" --out out/cx20y/FINAL.csv</code></p>
 <p><small>خروجی خام: <code>out/cx20y/*.csv</code> (خلاصه)، <code>*_trades.csv</code> (ریز معاملات)،
 <code>summary.csv</code>، <code>blocks.csv</code> · اسکریپت‌ها: <code>research/cx_report.py</code>، <code>research/cx_fig.py</code></small></p>
 

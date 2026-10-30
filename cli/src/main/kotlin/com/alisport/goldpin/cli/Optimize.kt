@@ -13,7 +13,7 @@ import kotlin.math.max
 //  ماشین‌خوان (CSV) و ریزش معامله‌به‌معامله (برای پژوهش فیلترها در پایتون).
 //
 //  نمونه:
-//    ./cli --data datasets/goldpin_xauusd_m1_3y.csv.gz --spec "s=1,mm=2,k=7,N=80,b=1800,eb=-2" \
+//    ./cli --data local-data/goldpin_xauusd_m1_3y.csv.gz --spec "s=1,mm=2,k=7,N=80,b=1800,eb=-2" \
 //          --trades /tmp/trades.csv --out /tmp/one.csv
 //
 //  spec کلیدها (همه اختیاری، پیش‌فرض = همان Tuned):

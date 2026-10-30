@@ -1,6 +1,6 @@
 # راهنمای کامل «بک‌تست داخلی» — داده، محل دانلود، فایل‌ها و جزئیات اجرا
 
-> **یادداشت به‌روزرسانی ۲۰۲۶-۱۰-۲۳:** این راهنما در ابتدا برای نسخهٔ ۱٫۴٫۲۸ نوشته شده و بخش‌های جزئی آن وضعیت قدیمی بسته‌بندی/انتشار را توصیف می‌کنند. در نسخهٔ ۱٫۴٫۴۵ بازهٔ ۱، ۲، ۳ یا ۱۰ سال از تنظیمات اپ انتخاب می‌شود؛ فایل همان بازه جداگانه از مخزن دانلود و نتیجهٔ آن مستقل ذخیره می‌شود. هیچ دیتاستی داخل APK نیست. مشخصات و هش‌های معتبر دیتاست‌ها در [`datasets/README.md`](../datasets/README.md) قرار دارند. مراحل و نام‌گذاری فایل‌های نسخهٔ قبلی در ادامهٔ این سند را تاریخی در نظر بگیرید.
+> **یادداشت به‌روزرسانی ۲۰۲۶-۱۰-۲۳:** این راهنما در ابتدا برای نسخهٔ ۱٫۴٫۲۸ نوشته شده و بخش‌های جزئی آن وضعیت قدیمی بسته‌بندی/انتشار را توصیف می‌کنند. در نسخهٔ ۱٫۴٫۴۵ بازهٔ ۱، ۲، ۳ یا ۱۰ سال از تنظیمات اپ انتخاب می‌شود؛ فایل همان بازه جداگانه از مخزن دانلود و نتیجهٔ آن مستقل ذخیره می‌شود. هیچ دیتاستی داخل APK نیست. مشخصات و هش‌های معتبر دیتاست‌ها در [`data-manifests/README.md`](../data-manifests/README.md) قرار دارند. مراحل و نام‌گذاری فایل‌های نسخهٔ قبلی در ادامهٔ این سند را تاریخی در نظر بگیرید.
 
 **نسخهٔ اپ:** ۱٫۴٫۲۸ (versionCode 41) · **تاریخ:** ۲۰۲۶-۱۰-۲۰
 **وضعیت:** پیاده‌سازی‌شده، کامپایل‌شده، ۴۱ آزمون موتور سبز، APK ساخته و منتشرشده.
@@ -41,7 +41,7 @@
 | حجم فایل | **۵٬۱۲۸٬۰۰۱ بایت** (۴٫۸۹ مگابایت) — gzip |
 | sha256 | `15fffd94b9c1970080d6012ff2aa3ae307d18a872381c677e44d16b5fd08db44` |
 | میزان حجم | حجم واقعی (tick volume) — میانه ≈ **۵۶۴** در دقیقه، **صفر** کندل بی‌حجم |
-| محل دانلود | GitHub Release با تگ **`data-v1`** در مخزن `alisport1384/ST2` (آینه: `ST1`) |
+| محل دانلود | GitHub Release با تگ **`data-v1`** در مخزن `alisport1384/ST3` |
 | محل ذخیره روی گوشی | `Android/data/com.alisport.goldpin/files/` |
 | داخل APK؟ | **خیر** — APK همان ≈۱٫۵ مگابایت می‌ماند؛ داده یک‌بار دانلود می‌شود |
 | زمان اولین اجرا | ≈ **۲۸ ثانیه** (روی ۲ هستهٔ Sandy Bridge) |
@@ -93,24 +93,21 @@ timestamp,open,high,low,close,volume
 
 ## ۳) محل دانلود (بخش Releases)
 
-> از نسخهٔ ۱٫۴٫۵۰ فایل‌های دیتاست **از پوشهٔ `datasets/` مخزن بیرون رفتند** و فقط به‌صورت
-> asset در Release تگ `data-v1` می‌مانند. پوشهٔ `datasets/` در مخزن فقط `README.md` و فایل‌های
-> `.meta.json` را دارد. برای کار محلی: `./tools/fetch_datasets.sh`.
+> فایل‌های دیتاست سالانه در مخزن قرار ندارند و فقط به‌صورت
+> asset در Release تگ `data-v1` می‌مانند. مشخصات و فایل‌های `.meta.json` در `data-manifests/` هستند. برای کار محلی: `./tools/fetch_datasets.sh`.
 
 ### ۳-۱ آدرس دقیق
 
 ```
-https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz
+https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz
 ```
 
 این آدرس در کد به‌صورت ثابت تعریف شده است:
 
 ```kotlin
 // app/src/main/kotlin/com/alisport/goldpin/data/Feed.kt
-const val DATA_RELEASE_BASE = "https://github.com/alisport1384/ST2/releases/download/data-v1"
-const val DATA_RELEASE_MIRROR = "https://github.com/alisport1384/ST1/releases/download/data-v1"
+const val DATA_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-v1"
 const val BACKTEST_DATA_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_1y.csv.gz"
-const val BACKTEST_DATA_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_1y.csv.gz"
 const val BACKTEST_DATA_SHA256 = "15fffd94b9c1970080d6012ff2aa3ae307d18a872381c677e44d16b5fd08db44"
 const val BACKTEST_DATA_BARS = 351_894
 ```
@@ -261,7 +258,7 @@ sha256            = 15fffd94…08db44
 
 ```bash
 # یک‌بار انجام شد
-POST https://api.github.com/repos/alisport1384/ST2/releases       → tag: data-v1
+POST https://api.github.com/repos/alisport1384/ST3/releases       → tag: data-v1
 POST .../releases/<id>/assets?name=goldpin_xauusd_m1_1y.csv.gz    → 201 Created
 # سپس فایل دوباره دانلود و هش مقایسه شد ⇒ مطابق
 ```

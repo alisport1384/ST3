@@ -14,9 +14,9 @@ SWEEP_PHASE=7 SWEEP_OUT=./sweep ./gradlew :engine:test --tests "*ParamSweepTest*
 
 
 > **دادهٔ خام کجاست؟** فایل‌های `goldpin_xauusd_m1_*.csv.gz` دیگر داخل مخزن نیستند و به‌صورت
-> asset در Release تگ [`data-v1`](https://github.com/alisport1384/ST2/releases/tag/data-v1) هستند.
+> asset در Release تگ [`data-v1`](https://github.com/alisport1384/ST3/releases/tag/data-v1) هستند.
 > قبل از اجرای دستورهای این صفحه یک بار `./tools/fetch_datasets.sh 10y 20y` را بزنید تا در
-> `datasets/` قرار بگیرند.
+> `local-data/` قرار بگیرند.
 
 ## فازها
 
@@ -63,7 +63,7 @@ SWEEP_PHASE=7 SWEEP_OUT=./sweep ./gradlew :engine:test --tests "*ParamSweepTest*
 
 # جاروب ده‌ساله (۱٫۴٫۴۶) — آموزش / نگه‌داشته‌شده / کل دهه
 
-دیتاست: `datasets/goldpin_xauusd_m1_10y.csv.gz` (۳٬۴۰۲٬۱۲۶ کندل · ۲۰۱۶-۰۸-۲۱ تا
+دیتاست: `local-data/goldpin_xauusd_m1_10y.csv.gz` (۳٬۴۰۲٬۱۲۶ کندل · ۲۰۱۶-۰۸-۲۱ تا
 ۲۰۲۶-۰۸-۲۰ · sha256 `c0e5c8d2…`). روش ضد برازش بیش‌برازش: جست‌وجو روی **آموزش
 ۲۰۱۶–۲۰۲۲**، اعتبارسنجی روی **نگه‌داشته‌شدهٔ ۲۰۲۳–۲۰۲۶** (در تنظیم دخیل نبود)، و
 عدد نهایی روی **کل دهه**.
@@ -109,7 +109,7 @@ SWEEP_PHASE=11 SWEEP_DATA=10y SWEEP_FROM_YEAR=2016 SWEEP_TO_YEAR=2023 \
 
 # برش ۲۰ساله (۱٫۴٫۴۷)
 
-دیتاست `datasets/goldpin_xauusd_m1_20y.csv.gz` (۶٬۵۶۳٬۷۲۳ کندل · ۲۰۰۶-۰۸-۲۱ تا
+دیتاست `local-data/goldpin_xauusd_m1_20y.csv.gz` (۶٬۵۶۳٬۷۲۳ کندل · ۲۰۰۶-۰۸-۲۱ تا
 ۲۰۲۶-۰۸-۲۰ · sha256 `ffbc7c1b…`) دقیقاً مثل مخزن ST به اپ اضافه شد: مشخصات دانلود در
 `Feed.BACKTEST_DATASETS`، سقف فشرده‌سازی ۸ میلیون کندل، `largeHeap` و هشدار حافظه
 در رابط کاربری. راستی‌آزمایی سرتاسری (`sweep_phase20_20y.csv`، فاز ۲۰ جاروب):
@@ -122,7 +122,7 @@ SWEEP_PHASE=11 SWEEP_DATA=10y SWEEP_FROM_YEAR=2016 SWEEP_TO_YEAR=2023 \
 
 # تنظیم دوباره روی دادهٔ ۲۰ساله (نسخهٔ ۳ Tuned — ۱٫۴٫۴۸)
 
-داده: `datasets/goldpin_xauusd_m1_20y.csv.gz` (۶٬۵۶۳٬۷۲۳ کندل · ۲۰۰۶ تا ۲۰۲۶ ·
+داده: `local-data/goldpin_xauusd_m1_20y.csv.gz` (۶٬۵۶۳٬۷۲۳ کندل · ۲۰۰۶ تا ۲۰۲۶ ·
 کارمزد ۰٫۷). روش: جست‌وجو روی آموزش ۲۰۰۶–۲۰۱۶ (فاز ۲۱–۲۲)، اعتبارسنجی روی
 نگه‌داشته‌شدهٔ ۲۰۱۷–۲۰۲۶ (فاز ۲۳)، فینال روی کل ۲۰ سال برای همهٔ مودها و
 خانواده‌ها (فاز ۲۴)، کنترل رژیم اخیر ۲۰۲۳–۲۰۲۶ (فاز ۲۵) و اعداد نگهبان روی

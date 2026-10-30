@@ -47,7 +47,7 @@
 ## ۱) روش کار (قابل بازتولید)
 
 * **موتور واقعی:** هر عدد این سند از اجرای `com.alisport.goldpin.cli.OptimizeKt` روی
-  `datasets/goldpin_xauusd_m1_20y.csv.gz` آمده است — همان `Engine` و `PaperBroker` که در اپ
+  `local-data/goldpin_xauusd_m1_20y.csv.gz` آمده است — همان `Engine` و `PaperBroker` که در اپ
   گوشی اجرا می‌شوند (نه بازنویسی در پایتون).
 * **کارمزد ۰٫۷** روی هر معامله، همان‌طور که در تنظیمات آزمون‌شده هست (`cmsn=0.7`).
 * **ورودها ثابت، فقط مدیریت عوض می‌شود:** همهٔ اجراها با همان تنظیم ورود
@@ -58,7 +58,7 @@
 * **دستور بازتولید (استراتژی ۱، سیستم نهایی):**
   ```
   java -cp "cli/build/install/cli/lib/*" com.alisport.goldpin.cli.OptimizeKt \
-    --data datasets/goldpin_xauusd_m1_20y.csv.gz \
+    --data local-data/goldpin_xauusd_m1_20y.csv.gz \
     --spec "tag=s1-smart,s=1,mm=2,k=7,b=1800,N=80,eb=-2,hFrom=5,hTo=15,atrPct=0.25,cmsn=0.7,\
              mgmt=1,mgmtGate=0.30,holdR=0.0,holdDays=1,trailStart=3.5,trailDist=1.5"
   ```

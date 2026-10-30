@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # اجرای دسته‌ای spec ها روی دادهٔ ۲۰ ساله — هر spec یک CSV جدا (چون --trades بازنویسی می‌شود)
 set -u
-J=/home/user/.tools/jdk17/bin/java
-CP="/home/user/ST2work/cli/build/install/cli/lib/*"
-DATA=/home/user/ST2work/datasets/goldpin_xauusd_m1_20y.csv.gz
-OUT=/home/user/ST2work/out/cx20y
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+J="${JAVA_HOME:-/home/user/.tools/jdk17}/bin/java"
+CP="$ROOT/cli/build/install/cli/lib/*"
+DATA=$ROOT/local-data/goldpin_xauusd_m1_20y.csv.gz
+OUT=$ROOT/out/cx20y
 mkdir -p "$OUT"
 LIST="$1"
 while IFS='|' read -r tag spec; do

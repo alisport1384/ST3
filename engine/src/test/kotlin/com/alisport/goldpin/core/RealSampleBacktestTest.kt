@@ -20,7 +20,7 @@ class RealSampleBacktestTest {
         val asset = listOf(
             "app/src/main/assets/sample_xauusd_m1.csv.gz",
             "../app/src/main/assets/sample_xauusd_m1.csv.gz",
-            "/home/user/ST2/app/src/main/assets/sample_xauusd_m1.csv.gz"
+
         ).map(::File).firstOrNull { it.exists() }
         assumeTrue(asset != null, "فایل نمونهٔ داده در دسترس نیست")
 

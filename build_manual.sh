@@ -11,13 +11,13 @@ SDK=${ANDROID_SDK:-/home/user/.tools/android-sdk}
 BT=$SDK/build-tools/34.0.0
 AJ=$SDK/platforms/android-34/android.jar
 KOTLINC=${KOTLINC:-/tmp/kotlinc}
-SRC=${SRC:-/home/user/ST2w}
+SRC=${SRC:-$(cd "$(dirname "$0")" && pwd)}
 OUT_DIR=${OUT_DIR:-/home/user}
 # ⚠ پوشهٔ کار روی tmpfs نگذارید اگر RAM کم است: چند صد مگابایت class/dex مستقیم
 #    از حافظه می‌خورد (نه دیسک).
 W=${APK_WORK:-/tmp/apk}
-VC=${1:-69}
-VN=${2:-1.5.03}
+VC=${1:-73}
+VN=${2:-1.5.07}
 rm -rf $W && mkdir -p $W/gen $W/classes $W/kclasses $W/dex
 cd $SRC
 

@@ -33,8 +33,7 @@ data class BacktestDatasetSpec(
     val bars: Int,
     val bytesGz: Long,
     val sha256: String,
-    val url: String,
-    val fallbackUrl: String? = null
+    val url: String
 )
 
 /** Primitive-backed candle view for multi-million-bar histories. */
@@ -627,43 +626,37 @@ object Feed {
     // ── دیتاست‌های بک‌تست داخلی (طرح B) ────────────────────────────────────────
     // فایل‌های ۱، ۲، ۳، ۱۰ و ۲۰ ساله **داخل مخزن نیستند**؛ از بخش Releases مخزن
     // GoldPin دانلود می‌شوند (تگ data-v1). این کار حجم clone را کم و سرعت دانلود اپ را
-    // بیشتر می‌کند. آینهٔ دوم (ST2) در صورت خطای شبکه امتحان می‌شود.
+    // بیشتر می‌کند؛ همهٔ فایل‌ها فقط از Release مخزن ST3 دریافت می‌شوند.
     const val DATA_RELEASE_TAG = "data-v1"
     const val DATA_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-v1"
-    const val DATA_RELEASE_MIRROR = "https://github.com/alisport1384/ST2/releases/download/data-v1"
 
     const val BACKTEST_DATA_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_1y.csv.gz"
-    const val BACKTEST_DATA_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_1y.csv.gz"
     const val BACKTEST_DATA_SHA256 = "15fffd94b9c1970080d6012ff2aa3ae307d18a872381c677e44d16b5fd08db44"
     const val BACKTEST_DATA_BARS = 351_894
     const val BACKTEST_DATA_2Y_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_2y.csv.gz"
-    const val BACKTEST_DATA_2Y_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_2y.csv.gz"
     const val BACKTEST_DATA_2Y_SHA256 = "873d4ffc765723abfada8ef55fbf8b9bb9c7432125187395972f51af94496e9f"
     const val BACKTEST_DATA_2Y_BARS = 701_067
     const val BACKTEST_DATA_3Y_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_3y.csv.gz"
-    const val BACKTEST_DATA_3Y_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_3y.csv.gz"
     const val BACKTEST_DATA_3Y_SHA256 = "56751049149f3df1ed134fdbc5e667ec57655f445edde5820ef9d9fed6697fcc"
     const val BACKTEST_DATA_3Y_BARS = 1_040_730
     const val BACKTEST_DATA_10Y_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_10y.csv.gz"
-    const val BACKTEST_DATA_10Y_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_10y.csv.gz"
     const val BACKTEST_DATA_10Y_SHA256 = "c0e5c8d2151605db8d0cf1c75f3f1d6cca0ecc5304bad233f536ffe45d7f7881"
     const val BACKTEST_DATA_10Y_BARS = 3_402_126
     const val BACKTEST_DATA_20Y_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_20y.csv.gz"
-    const val BACKTEST_DATA_20Y_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_20y.csv.gz"
     const val BACKTEST_DATA_20Y_SHA256 = "ffbc7c1bd8723728714dfc2f476102f7887be3797d0caf187b622aa533c830c9"
     const val BACKTEST_DATA_20Y_BARS = 6_563_723
 
     val BACKTEST_DATASETS = listOf(
         BacktestDatasetSpec(1, BACKTEST_DATA_BARS, 5_128_001L, BACKTEST_DATA_SHA256,
-            BACKTEST_DATA_URL, BACKTEST_DATA_FALLBACK_URL),
+            BACKTEST_DATA_URL),
         BacktestDatasetSpec(2, BACKTEST_DATA_2Y_BARS, 9_844_331L, BACKTEST_DATA_2Y_SHA256,
-            BACKTEST_DATA_2Y_URL, BACKTEST_DATA_2Y_FALLBACK_URL),
+            BACKTEST_DATA_2Y_URL),
         BacktestDatasetSpec(3, BACKTEST_DATA_3Y_BARS, 14_310_975L, BACKTEST_DATA_3Y_SHA256,
-            BACKTEST_DATA_3Y_URL, BACKTEST_DATA_3Y_FALLBACK_URL),
+            BACKTEST_DATA_3Y_URL),
         BacktestDatasetSpec(10, BACKTEST_DATA_10Y_BARS, 43_314_146L, BACKTEST_DATA_10Y_SHA256,
-            BACKTEST_DATA_10Y_URL, BACKTEST_DATA_10Y_FALLBACK_URL),
+            BACKTEST_DATA_10Y_URL),
         BacktestDatasetSpec(20, BACKTEST_DATA_20Y_BARS, 77_779_089L, BACKTEST_DATA_20Y_SHA256,
-            BACKTEST_DATA_20Y_URL, BACKTEST_DATA_20Y_FALLBACK_URL)
+            BACKTEST_DATA_20Y_URL)
     )
 
     // ── دیتاست‌های نفت WTI (USOIL) — M1 واقعی ۲۰۰۵ تا ۲۰۲۶ ─────────────────────
@@ -671,24 +664,23 @@ object Feed {
     //  بازه‌ها همان ۱/۲/۳/۱۰/۲۰ سال طلا هستند تا رابط و مقایسه یک‌شکل بماند.
     const val OIL_RELEASE_TAG = "data-oil-v1"
     const val OIL_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-oil-v1"
-    const val OIL_RELEASE_MIRROR = "https://github.com/alisport1384/ST2/releases/download/data-oil-v1"
 
     val BACKTEST_DATASETS_OIL = listOf(
         BacktestDatasetSpec(1, 347_718, 4_073_006L,
             "616cb8f68ccce3793c529282a86e9500f1e16ea6e54b55376f07e44150bc8590",
-            "$OIL_RELEASE_BASE/goldpin_usoil_m1_1y.csv.gz", "$OIL_RELEASE_MIRROR/goldpin_usoil_m1_1y.csv.gz"),
+            "$OIL_RELEASE_BASE/goldpin_usoil_m1_1y.csv.gz"),
         BacktestDatasetSpec(2, 689_491, 7_545_461L,
             "78e4a8fdbce2fcd4a39a37f01f3e3a22ffb73cb70aa38cb25594c9447f7d6d0a",
-            "$OIL_RELEASE_BASE/goldpin_usoil_m1_2y.csv.gz", "$OIL_RELEASE_MIRROR/goldpin_usoil_m1_2y.csv.gz"),
+            "$OIL_RELEASE_BASE/goldpin_usoil_m1_2y.csv.gz"),
         BacktestDatasetSpec(3, 1_033_192, 11_087_423L,
             "9394e460c705bdcddc2b3a843beb8ff3769fb72e436565bb8cc84521afc6b21b",
-            "$OIL_RELEASE_BASE/goldpin_usoil_m1_3y.csv.gz", "$OIL_RELEASE_MIRROR/goldpin_usoil_m1_3y.csv.gz"),
+            "$OIL_RELEASE_BASE/goldpin_usoil_m1_3y.csv.gz"),
         BacktestDatasetSpec(10, 3_361_756, 35_630_197L,
             "7c1f7cb1be6bbb3033be3d6c96555a6cebc21b151e4bda1b2cb8fb0a352465ec",
-            "$OIL_RELEASE_BASE/goldpin_usoil_m1_10y.csv.gz", "$OIL_RELEASE_MIRROR/goldpin_usoil_m1_10y.csv.gz"),
+            "$OIL_RELEASE_BASE/goldpin_usoil_m1_10y.csv.gz"),
         BacktestDatasetSpec(20, 6_829_560, 69_076_333L,
             "cee6b304a900e6f0bc2d3a33ee201523c2905714d9ece805aeabfc9028ab6313",
-            "$OIL_RELEASE_BASE/goldpin_usoil_m1_20y.csv.gz", "$OIL_RELEASE_MIRROR/goldpin_usoil_m1_20y.csv.gz")
+            "$OIL_RELEASE_BASE/goldpin_usoil_m1_20y.csv.gz")
     )
 
     // ── دیتاست‌های پوند/دلار (GBPUSD) — M1 واقعی ۲۰۰۲ تا ۲۰۲۶ با حجم ────────────
@@ -698,7 +690,7 @@ object Feed {
     //  هیچ ضریبی مستقیم مصرف می‌شود. (منبع‌های ردشده: HISTDATA حجمش برای همهٔ ردیف‌ها
     //  صفر بود؛ Dukascopy از این محیط با ۵۰۳ و تایم‌اوت پاسخ می‌داد.)
     //  بازه‌ها با **تفریق سال تقویمی** لنگر شده‌اند، دقیقاً مثل طلا: آخرین کندل همهٔ
-    //  فایل‌ها ۲۰۲۶-۰۸-۲۰T۲۳:۵۹Z است. SHAها از `datasets/fx_gbpusd_summary.json`
+    //  فایل‌ها ۲۰۲۶-۰۸-۲۰T۲۳:۵۹Z است. SHAها از `data-manifests/fx_gbpusd_summary.json`
     //  آمده‌اند و آزمون `RepositoryFxDatasetTest` همان‌ها را قفل می‌کند.
     const val FX_RELEASE_TAG = "data-fx-v1"
     const val FX_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-fx-v1"

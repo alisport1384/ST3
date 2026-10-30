@@ -33,9 +33,9 @@ class AdaptiveVolAndGuardTest {
         const val MAX_CANDLES = 200_000
 
         fun sampleFile(): File? = listOf(
-            "datasets/goldpin_xauusd_m1_1y.csv.gz",
-            "../datasets/goldpin_xauusd_m1_1y.csv.gz",
-            "/home/user/ST2/datasets/goldpin_xauusd_m1_1y.csv.gz",
+            "local-data/goldpin_xauusd_m1_1y.csv.gz",
+            "../local-data/goldpin_xauusd_m1_1y.csv.gz",
+
             "app/src/main/assets/sample_xauusd_m1.csv.gz",
             "../app/src/main/assets/sample_xauusd_m1.csv.gz"
         ).map(::File).firstOrNull { it.exists() }

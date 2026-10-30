@@ -2245,16 +2245,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
                     else "دانلود ${Fa.d(years.toString())} ساله: ${Fa.n(got / 1048576.0, 1)} مگابایت"
                     notifyUi()
                 }
-                try {
-                    Feed.downloadTo(ds.url, part, onProgress)
-                } catch (primaryError: Exception) {
-                    val fallback = ds.fallbackUrl
-                    if (fallback == null) throw primaryError
-                    part.delete()
-                    Log.w(Log.CAT_FEED, "دانلود دیتاست ریپو ناموفق؛ تلاش با Release قبلی",
-                        primaryError.message ?: "")
-                    Feed.downloadTo(fallback, part, onProgress)
-                }
+                Feed.downloadTo(ds.url, part, onProgress)
                 val hash = Feed.sha256(part)
                 if (!hash.equals(ds.sha256, ignoreCase = true)) {
                     part.delete()
@@ -2876,7 +2867,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
 
     companion object {
         /** نسخهٔ نمایشی — تنها منبع حقیقت برای هدر لاگ. با `versionName` در build.gradle یکی نگه دارید. */
-        const val APP_VERSION = "1.5.06"
+        const val APP_VERSION = "1.5.07"
 
         /**
          * «نمونهٔ» سازگاری: کد رابط همه‌جا `AppState.instance` را می‌خواند و باید

@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-OUT="/home/user/ST2work/out/cx20y"
+OUT="out/cx20y"
 SEL=[("B1-L0","baseline v1.4.51 (cx=0)"),
      ("FINAL-defaults","FINAL defaults (cx=3, gate .33, box .10)"),
      ("B1-g35box10","gate .35 + box .10 (best avgR)"),
@@ -34,5 +34,5 @@ axs[1].set_ylabel("drawdown %")
 axs[1].grid(alpha=.25); axs[1].legend(fontsize=7)
 fig.autofmt_xdate()
 fig.tight_layout()
-fig.savefig("/home/user/ST2work/docs/cx20y_v1.4.52.png")
+fig.savefig("docs/cx20y_v1.4.52.png")
 print("saved")

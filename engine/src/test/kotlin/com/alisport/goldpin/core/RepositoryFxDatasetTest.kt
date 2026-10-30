@@ -20,7 +20,7 @@ class RepositoryFxDatasetTest {
 
     @Test fun `available GBPUSD archives have expected hash`() {
         for ((year, _, sha) in expected) {
-            val file = File("datasets/goldpin_gbpusd_m1_${year}y.csv.gz")
+            val file = File("local-data/goldpin_gbpusd_m1_${year}y.csv.gz")
             if (!file.isFile) continue
             val digest = MessageDigest.getInstance("SHA-256")
             file.inputStream().buffered().use { stream ->
@@ -32,7 +32,7 @@ class RepositoryFxDatasetTest {
     }
 
     @Test fun `twenty year archive has ordered OHLCV rows and strictly positive volume`() {
-        val file = File("datasets/goldpin_gbpusd_m1_20y.csv.gz")
+        val file = File("local-data/goldpin_gbpusd_m1_20y.csv.gz")
         assumeTrue(file.isFile, "20-year GBPUSD archive unavailable")
         var count = 0; var prior = Long.MIN_VALUE
         GZIPInputStream(file.inputStream().buffered(65536)).bufferedReader().use { reader ->

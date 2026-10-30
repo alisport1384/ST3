@@ -32,7 +32,7 @@
 
 ## ۱) روش کار (تا نتیجه قابل بازتولید باشد)
 
-* داده: `datasets/goldpin_xauusd_m1_10y.csv.gz` (۳٬۴۰۲٬۱۲۶ کندل M1 طلا، ۲۰۱۶-۰۸-۲۱ تا
+* داده: `local-data/goldpin_xauusd_m1_10y.csv.gz` (۳٬۴۰۲٬۱۲۶ کندل M1 طلا، ۲۰۱۶-۰۸-۲۱ تا
   ۲۰۲۶-۰۸-۲۰) و برای آزمون نهایی `goldpin_xauusd_m1_20y.csv.gz` (۶٬۵۶۳٬۷۲۳ کندل، ۲۰۰۶ تا ۲۰۲۶).
 * موتور و کارگزار: **همان کدی که در اپ اجرا می‌شود** (`Engine` + `PaperBroker`)، نه شبیه‌سازی جدا.
 * کارمزد: ۰٫۷ واحد قیمت روی هر معامله (`cmsn`)، مستقل از مود مالی — یعنی هر سه مود
@@ -47,7 +47,7 @@
 ```bash
 ./gradlew :cli:installDist
 java -cp "cli/build/install/cli/lib/*" com.alisport.goldpin.cli.OptimizeKt \
-  --data datasets/goldpin_xauusd_m1_10y.csv.gz \
+  --data local-data/goldpin_xauusd_m1_10y.csv.gz \
   --spec "tag=hour5-15,s=1,mm=2,k=7,b=1800,N=80,eb=-2,hFrom=5,hTo=15" \
   --out out/sweep_hour.csv
 ```

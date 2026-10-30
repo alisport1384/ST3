@@ -16,7 +16,7 @@ import os
 import sys
 
 PERIOD = 14
-DATASETS = "/home/user/ST1/datasets"
+DATASETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "local-data")
 
 
 def h1_atr(path):

@@ -7,7 +7,7 @@ from pathlib import Path
 if len(sys.argv) != 4 or sys.argv[2] not in ('1', '2', '3', '10'):
     sys.exit('usage: slice_fx_dataset.py 20y.csv.gz {1|2|3|10} out.csv.gz')
 src, years, out = sys.argv[1], sys.argv[2], sys.argv[3]
-meta = json.loads((Path(__file__).resolve().parent.parent / 'datasets/fx_gbpusd_summary.json').read_text())[years]
+meta = json.loads((Path(__file__).resolve().parent.parent / 'data-manifests/fx_gbpusd_summary.json').read_text())[years]
 cut = int(datetime.datetime(2026-int(years), 8, 21, tzinfo=datetime.timezone.utc).timestamp()*1000)
 tmp = out + '.part'
 try:

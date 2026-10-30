@@ -9,8 +9,8 @@ import kotlin.test.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
 /**
- * دادهٔ یک‌سالهٔ XAUUSD ‏M1 که در پوشهٔ datasets ریپو نگهداری می‌شود
- * (`datasets/goldpin_xauusd_m1_1y.csv.gz`).
+ * دادهٔ یک‌سالهٔ XAUUSD ‏M1 که برای آزمون در پوشهٔ محلی دریافت می‌شود
+ * (`local-data/goldpin_xauusd_m1_1y.csv.gz`).
  *
  * این آزمون «قرارداد فایل» را قفل می‌کند: اگر روزی فایل دیتاست عوض/ناقص/جابه‌جا شود،
  * بک‌تست داخلی روی گوشی بی‌صدا خراب می‌شود؛ پس همان‌جا که داده در ریپو نگهداری می‌شود،
@@ -33,9 +33,9 @@ class RepositoryOneYearDataTest {
         const val EXPECT_LAST_MS = 1_787_270_340_000L
 
         fun datasetFile(): File? = listOf(
-            "datasets/goldpin_xauusd_m1_1y.csv.gz",
-            "../datasets/goldpin_xauusd_m1_1y.csv.gz",
-            "/home/user/ST2/datasets/goldpin_xauusd_m1_1y.csv.gz"
+            "local-data/goldpin_xauusd_m1_1y.csv.gz",
+            "../local-data/goldpin_xauusd_m1_1y.csv.gz",
+
         ).map(::File).firstOrNull { it.exists() }
     }
 

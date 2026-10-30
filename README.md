@@ -1,15 +1,15 @@
 # GoldPin
 
-اپ اندروید و موتور بک‌تست استراتژی GoldPin — **طلا (XAUUSD) و نفت WTI (USOIL) هم‌زمان**.
-نسخهٔ این انتشار: **1.5.03 (versionCode 69)** — دانلود: [`GoldPin-1.5.03-69.apk`](https://github.com/alisport1384/ST2/releases/download/v1.5.03/GoldPin-1.5.03-69.apk) ·
+اپ اندروید و موتور بک‌تست استراتژی GoldPin — **طلا (XAUUSD)، نفت WTI (USOIL) و پوند/دلار (GBPUSD)**.
+نسخهٔ این انتشار: **1.5.07 (versionCode 73)** — دانلود: [`GoldPin-1.5.07-73.apk`](https://github.com/alisport1384/ST3/releases/download/v1.5.07/GoldPin-1.5.07-73.apk) ·
 گزارش: [`docs/GOZARESH-SWAP-FX-v1.5.03.md`](docs/GOZARESH-SWAP-FX-v1.5.03.md).
 
-**تازه در ۱٫۵٫۰۳:** **سواپ شبانه** واقعاً محاسبه می‌شود — هر رول‌اور ۲۱:۰۰ UTC روی حجم
+**تاریخچهٔ نسخهٔ ۱٫۵٫۰۳:** **سواپ شبانه** واقعاً محاسبه می‌شود — هر رول‌اور ۲۱:۰۰ UTC روی حجم
 باقی‌مانده، چهارشنبه سه‌برابر، شب شنبه/یکشنبه صفر، علامت‌دار و در سود/زیان خالص و افت سرمایه.
 ۷ آزمون خودکار (`SwapTest`) + اصلاح باگ «۹ شب به‌جای ۷ شب».
 در همین نسخه اسکرین جفت‌ارزها انجام شد و نتیجه صریح است: **هیچ‌کدام از ۱۲ جفت لبهٔ پایدار
 ندارد** (بهترین‌ها PF ۱٫۱۰–۱٫۱۴ با نیمهٔ ناپایدار) و موتور روی FX امروز صفر معامله می‌دهد؛
-پس FX وارد اپ نشد. جدول‌ها و دلیل‌ها در همان گزارش.
+در آن نسخه FX وارد اپ نشد؛ پوند/دلار در نسخهٔ جدید پشتیبانی می‌شود. جدول‌ها و دلیل‌ها در همان گزارش.
 
 **۱٫۵٫۰۲ (نسخهٔ قبل):** کارمزد هر دو نماد از **پروفایل رسمی بروکر** می‌آمد، نه از عدد دستی.
 مرجع: **آلپاری** — طلا ۰٫۲۳۷ و نفت ۰٫۰۱۵۱ دلار بر واحد در Pro ECN. جدول کامل:
@@ -23,17 +23,17 @@
 
 | برش | کندل | حجم فشرده | دانلود |
 |---|---:|---:|---|
-| ۱ سال | ۳۵۱٬۸۹۴ | ۵٫۱ MB | [`1y`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) |
-| ۲ سال | ۷۰۱٬۰۶۷ | ۹٫۸ MB | [`2y`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) |
-| ۳ سال | ۱٬۰۴۰٬۷۳۰ | ۱۴٫۳ MB | [`3y`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) |
-| ۱۰ سال | ۳٬۴۰۲٬۱۲۶ | ۴۳٫۳ MB | [`10y`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
-| ۲۰ سال | ۶٬۵۶۳٬۷۲۳ | ۷۷٫۸ MB | [`20y`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
+| ۱ سال | ۳۵۱٬۸۹۴ | ۵٫۱ MB | [`1y`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) |
+| ۲ سال | ۷۰۱٬۰۶۷ | ۹٫۸ MB | [`2y`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) |
+| ۳ سال | ۱٬۰۴۰٬۷۳۰ | ۱۴٫۳ MB | [`3y`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) |
+| ۱۰ سال | ۳٬۴۰۲٬۱۲۶ | ۴۳٫۳ MB | [`10y`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
+| ۲۰ سال | ۶٬۵۶۳٬۷۲۳ | ۷۷٫۸ MB | [`20y`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
 
 هیچ فایل دیتاستی **نه داخل APK و نه داخل مخزن** نیست: هر برش asset همان
-[Release با تگ `data-v1`](https://github.com/alisport1384/ST2/releases/tag/data-v1) است و اپ هنگام
-انتخاب بازه از همان‌جا دانلود می‌کند (اول `ST2`، در صورت خطا آینهٔ `ST1`)، سپس SHA-256 را بررسی
+[Release با تگ `data-v1`](https://github.com/alisport1384/ST3/releases/tag/data-v1) است و اپ هنگام
+انتخاب بازه از همان‌جا دانلود می‌کند (فقط از `ST3`)، سپس SHA-256 را بررسی
 می‌کند. به همین دلیل `git clone` چند مگابایت است، نه چند صد مگابایت. مشخصات، هش‌ها، منبع و روش
-بازتولید در [`datasets/README.md`](datasets/README.md) آمده است.
+بازتولید در [`data-manifests/README.md`](data-manifests/README.md) آمده است.
 
 برای ساختن/تست محلی، داده‌ها را با یک فرمان برگردانید:
 

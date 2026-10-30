@@ -26,9 +26,9 @@ class TunedShippedDefaultsTest {
 
     private companion object {
         fun assetFile(): File? = listOf(
-            "datasets/goldpin_xauusd_m1_1y.csv.gz",
-            "../datasets/goldpin_xauusd_m1_1y.csv.gz",
-            "/home/user/ST2/datasets/goldpin_xauusd_m1_1y.csv.gz"
+            "local-data/goldpin_xauusd_m1_1y.csv.gz",
+            "../local-data/goldpin_xauusd_m1_1y.csv.gz",
+
         ).map(::File).firstOrNull { it.exists() }
 
         fun loadCandles(): List<Candle> {

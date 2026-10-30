@@ -10,7 +10,7 @@
 import csv, glob, os, math, statistics as st
 from datetime import datetime, timezone
 
-OUT = "/home/user/ST2work/out/cx20y"
+OUT = "out/cx20y"
 
 
 def load_summary():

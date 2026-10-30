@@ -28,9 +28,9 @@ class TunedTwentyYearTest {
 
     private companion object {
         fun dataFile(): File? = listOf(
-            "datasets/goldpin_xauusd_m1_20y.csv.gz",
-            "../datasets/goldpin_xauusd_m1_20y.csv.gz",
-            "/home/user/ST2new/datasets/goldpin_xauusd_m1_20y.csv.gz"
+            "local-data/goldpin_xauusd_m1_20y.csv.gz",
+            "../local-data/goldpin_xauusd_m1_20y.csv.gz",
+
         ).map(::File).firstOrNull { it.exists() }
 
         fun loadCandles(f: File): List<Candle> {

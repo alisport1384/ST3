@@ -35,9 +35,9 @@ class RepositoryMultiYearDataTest {
     )
 
     private fun datasetFile(years: Int): File? = listOf(
-        "datasets/goldpin_xauusd_m1_${years}y.csv.gz",
-        "../datasets/goldpin_xauusd_m1_${years}y.csv.gz",
-        "/home/user/ST2new/datasets/goldpin_xauusd_m1_${years}y.csv.gz"
+        "local-data/goldpin_xauusd_m1_${years}y.csv.gz",
+        "../local-data/goldpin_xauusd_m1_${years}y.csv.gz",
+
     ).map(::File).firstOrNull { it.isFile }
 
     private fun sha256(file: File): String {
@@ -57,7 +57,7 @@ class RepositoryMultiYearDataTest {
     fun `two three ten and twenty year downloads have valid data and stable hashes`() {
         for (expected in cases) {
             val file = datasetFile(expected.years)
-                ?: error("دیتاست ${expected.years} ساله در پوشهٔ datasets پیدا نشد")
+                ?: error("دیتاست ${expected.years} ساله در پوشهٔ local-data پیدا نشد")
             assertEquals(expected.bytes, file.length(), "اندازهٔ فایل ${expected.years} ساله تغییر کرده")
             assertEquals(expected.sha256, sha256(file), "هش فایل ${expected.years} ساله تغییر کرده")
 

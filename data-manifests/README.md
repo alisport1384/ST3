@@ -17,7 +17,7 @@
 ## رفتار اپ
 
 - از تنظیمات، بازهٔ ۱، ۲، ۳، ۱۰ یا ۲۰ سال را انتخاب و همان فایل را دانلود کنید؛ اپ اول از
-  `ST3/releases/download/data-v1` و در صورت خطا از آینهٔ `ST2` می‌گیرد؛ SHA-256 قبل از تأیید فایل بررسی می‌شود.
+  `ST3/releases/download/data-v1` می‌گیرد؛ SHA-256 قبل از تأیید فایل بررسی می‌شود.
 - برای اجرای بک‌تست، نشست داخلی را روشن کنید. با تغییر بازه، «اجرای مجدد» دیتاست انتخابی را بارگذاری می‌کند.
 - داده و نتیجهٔ هر بازه جدا هستند؛ حذف، دانلود یا اجرای یک بازه به بقیه دست نمی‌زند. هیچ دیتاستی داخل APK نیست.
 - برای تاریخچه‌های بلند، کندل‌ها با ستون‌های primitive نگه‌داری می‌شوند؛ زمان‌های دقیقه‌ای هم فشرده می‌شوند تا حافظهٔ کمتری مصرف شود.
@@ -33,7 +33,7 @@
 python3 -m pip install pandas numpy
 python3 tools/build_long_sample.py --src /path/XAUUSD_OHLCV_1M.csv \
   --from 2006-08-21 --to 2026-08-21 \
-  --out datasets/goldpin_xauusd_m1_20y.csv.gz
+  --out local-data/goldpin_xauusd_m1_20y.csv.gz
 ```
 
 ## دریافت مستقیم (بدون اپ)
@@ -49,17 +49,17 @@ curl -fLO $BASE/goldpin_xauusd_m1_10y.csv.gz
 curl -fLO $BASE/goldpin_xauusd_m1_20y.csv.gz
 ```
 
-| برش | لینک دانلود | آینهٔ دوم |
-|---|---|---|
-| ۱ سال | [data-v1/1y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) |
-| ۲ سال | [data-v1/2y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) |
-| ۳ سال | [data-v1/3y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) |
-| ۱۰ سال | [data-v1/10y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
-| ۲۰ سال | [data-v1/20y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
+| برش | لینک دانلود |
+|---|---|
+| ۱ سال | [data-v1/1y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) |
+| ۲ سال | [data-v1/2y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) |
+| ۳ سال | [data-v1/3y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) |
+| ۱۰ سال | [data-v1/10y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
+| ۲۰ سال | [data-v1/20y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
 
 ## دیتاست‌های نفت — USOIL، کندل M1 (تگ `data-oil-v1`)
 
-هر پنج برش با حجم در [Release نفت ST3](https://github.com/alisport1384/ST3/releases/tag/data-oil-v1) قرار دارند؛ فایل‌های سالانه داخل مخزن و APK نیستند. اپ ابتدا از ST3 و در صورت خطا از Release اصلی ST2 دریافت می‌کند و SHA-256 را بررسی می‌کند. فایل‌ها بایت‌به‌بایت همان فایل‌های منتشرشدهٔ اصلی هستند.
+هر پنج برش با حجم در [Release نفت ST3](https://github.com/alisport1384/ST3/releases/tag/data-oil-v1) قرار دارند؛ فایل‌های سالانه داخل مخزن و APK نیستند. اپ فقط از Release مخزن ST3 دریافت می‌کند و SHA-256 را بررسی می‌کند. فایل‌ها بایت‌به‌بایت همان فایل‌های منتشرشدهٔ اصلی هستند.
 
 | بازه | فایل | تعداد کندل | بایت فشرده | SHA-256 |
 |---|---|---:|---:|---|
@@ -109,13 +109,13 @@ SHA-256 پیش از تأیید بررسی می‌شود. آزمون `RepositoryF
 python3 -m pip install pyarrow
 python3 tools/build_fx_dataset.py --symbol GBPUSD \
   --from 2006-08-21 --to 2026-08-21 --anchor-to 2026-08-21 \
-  --cache /tmp/fxcache --out-dir datasets --ranges 1,2,3,10,20 \
+  --cache /tmp/fxcache --out-dir local-data --ranges 1,2,3,10,20 \
   --sample-out app/src/main/assets/sample_gbpusd_m1.csv --sample-bars 40000
 ```
 
 خروجی gzip **قطعی** است (`mtime=0`): بازسازی برش ۲۰ساله در ۲۰۲۶-۱۰-۳۰ بایت‌به‌بایت همان
 SHA-256 جدول بالا را داد. آمار هر برش در `.meta.json` کنارش و خلاصهٔ همه در
-`datasets/fx_gbpusd_summary.json` نوشته می‌شود.
+`data-manifests/fx_gbpusd_summary.json` نوشته می‌شود.
 
 ### دریافت مستقیم (بدون اپ)
 
@@ -130,16 +130,15 @@ curl -fLO $FX/goldpin_gbpusd_m1_20y.csv.gz
 
 ## برای کار روی کد (تست‌ها و هارنس CLI)
 
-تست‌های `engine` و `app` و همچنین `cli/OptimizeKt` دیتاست را از پوشهٔ محلی `datasets/` می‌خوانند.
+تست‌های `engine` و `app` و همچنین `cli/OptimizeKt` دیتاست را از پوشهٔ محلی `local-data/` می‌خوانند.
 یک بار اسکریپت زیر را بزنید تا هر پنج فایل دانلود و SHA-256 بررسی شود:
 
 ```bash
-./tools/fetch_datasets.sh            # همه
+./tools/fetch_datasets.sh all        # هر سه نماد
 ./tools/fetch_datasets.sh 1y 10y     # فقط دو برش
 ```
 
-این پوشه در `.gitignore` است، پس چیزی به مخزن برنمی‌گردد. اگر فایل نباشد، تست‌های وابسته به
-داده با `assumeTrue` **skip** می‌شوند (build نمی‌شکند).
+فایل‌های فشردهٔ محلی در `.gitignore` هستند. برخی تست‌ها در نبود داده skip می‌شوند؛ تست‌های دیگر ممکن است به دانلود قبلی نیاز داشته باشند.
 
 ### ساخت بازه‌های کوتاه‌تر از فایل ۲۰ساله
 

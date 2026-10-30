@@ -30,7 +30,7 @@
 نمونه:
   python3 tools/build_fx_dataset.py --symbol GBPUSD \
       --from 2006-08-21 --to 2026-08-21 \
-      --cache /tmp/hfcache --out-dir datasets --ranges 1,2,3,10,20
+      --cache /tmp/hfcache --out-dir local-data --ranges 1,2,3,10,20
 """
 import argparse
 import concurrent.futures as cf

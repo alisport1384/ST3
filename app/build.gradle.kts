@@ -11,8 +11,8 @@ android {
         applicationId = "com.alisport.goldpin"
         minSdk = 24
         targetSdk = 34
-        versionCode = 72
-        versionName = "1.5.06"
+        versionCode = 73
+        versionName = "1.5.07"
         resourceConfigurations += listOf("fa", "en")
     }
 
@@ -43,7 +43,7 @@ android {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/versions/**")
     }
 
-    // دیتاست‌های بک‌تست در پوشهٔ datasets مخزن نگهداری و جداگانه دانلود می‌شوند؛
+    // دیتاست‌های بک‌تست فقط از Release مخزن ST3 جداگانه دانلود می‌شوند؛
     // هرگز به APK اضافه نمی‌شوند تا حجم نصب‌شونده سبک بماند.
 
     lint { abortOnError = false }

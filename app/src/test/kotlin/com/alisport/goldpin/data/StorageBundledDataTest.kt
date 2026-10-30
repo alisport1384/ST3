@@ -74,8 +74,8 @@ class StorageBundledDataTest {
     @Test
     fun tenYearRepositoryFileParsesAsLargeRandomAccessSeries() {
         val file = listOf(
-            File("datasets/goldpin_xauusd_m1_10y.csv.gz"),
-            File("../datasets/goldpin_xauusd_m1_10y.csv.gz")
+            File("local-data/goldpin_xauusd_m1_10y.csv.gz"),
+            File("../local-data/goldpin_xauusd_m1_10y.csv.gz")
         ).firstOrNull { it.isFile }
         assumeTrue("Optional 10-year release asset not downloaded", file != null)
         val dataFile = file ?: return
@@ -92,8 +92,8 @@ class StorageBundledDataTest {
     @Test
     fun twentyYearRepositoryFileParsesAsPackedRandomAccessSeries() {
         val file = listOf(
-            File("datasets/goldpin_xauusd_m1_20y.csv.gz"),
-            File("../datasets/goldpin_xauusd_m1_20y.csv.gz")
+            File("local-data/goldpin_xauusd_m1_20y.csv.gz"),
+            File("../local-data/goldpin_xauusd_m1_20y.csv.gz")
         ).firstOrNull { it.isFile }
         assumeTrue("Optional 20-year release asset not downloaded", file != null)
         val dataFile = file ?: return
@@ -124,17 +124,12 @@ class StorageBundledDataTest {
         assertEquals(listOf(351_894, 701_067, 1_040_730, 3_402_126, 6_563_723), Feed.BACKTEST_DATASETS.map { it.bars })
         assertTrue(Feed.BACKTEST_DATASETS.all { it.sha256.length == 64 && it.url.startsWith("https://") })
         // از نسخهٔ ۱٫۴٫۵۰ هیچ دیتاستی داخل مخزن نیست؛ همه از Release تگ data-v1 می‌آیند
-        // و هر برش یک آینهٔ دوم (ST2) دارد.
         assertTrue(Feed.BACKTEST_DATASETS.all { it.url.startsWith(Feed.DATA_RELEASE_BASE + "/") })
-        assertTrue(Feed.BACKTEST_DATASETS.all {
-            it.fallbackUrl != null && it.fallbackUrl!!.startsWith(Feed.DATA_RELEASE_MIRROR + "/")
-        })
         // نام فایل در URL با بازهٔ همان برش جور است
         assertEquals(
             Feed.BACKTEST_DATASETS.map { it.url },
             listOf(1, 2, 3, 10, 20).map { "${Feed.DATA_RELEASE_BASE}/goldpin_xauusd_m1_${it}y.csv.gz" }
         )
-        assertEquals(Feed.BACKTEST_DATA_FALLBACK_URL, Feed.backtestDataset(1).fallbackUrl)
         assertEquals(43_314_146L, Feed.backtestDataset(10).bytesGz)
         assertEquals(77_779_089L, Feed.backtestDataset(20).bytesGz)
     }

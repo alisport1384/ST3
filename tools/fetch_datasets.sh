@@ -3,7 +3,7 @@
 # دریافت دیتاست‌های بک‌تست GoldPin از بخش Releases
 #
 # فایل‌های M1 (۱، ۲، ۳، ۱۰ و ۲۰ ساله) داخل مخزن نیستند؛ به‌صورت asset در Release
-# منتشر شده‌اند. این اسکریپت آن‌ها را در datasets/ می‌گذارد تا تست‌های engine/app و
+# منتشر شده‌اند. این اسکریپت آن‌ها را در local-data/ می‌گذارد تا تست‌های engine/app و
 # هارنس cli بتوانند اجرا شوند. SHA-256 هر فایل پیش از تأیید بررسی می‌شود.
 #
 #   ./tools/fetch_datasets.sh                 # هر پنج برش طلا (رفتار قدیمی، بدون تغییر)
@@ -13,16 +13,14 @@
 #   ./tools/fetch_datasets.sh oil             # هر پنج برش نفت
 #   ./tools/fetch_datasets.sh all             # هر سه نماد، هر پانزده فایل
 #
-# ⚠ SHAها را هرگز دستی ننویسید: از `datasets/fx_gbpusd_summary.json` و
-#   `datasets/*.meta.json` کپی می‌شوند و آزمون‌های `Repository*DataTest` همان‌ها را قفل
+# ⚠ SHAها را هرگز دستی ننویسید: از `data-manifests/fx_gbpusd_summary.json` و
+#   `data-manifests/*.meta.json` کپی می‌شوند و آزمون‌های `Repository*DataTest` همان‌ها را قفل
 #   کرده‌اند. SHA اشتباه یعنی اپ فایل سالم را «خراب» می‌داند و هرگز تأیید نمی‌کند.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-OWNER_REPO="${GOLDPIN_DATA_REPO:-alisport1384/ST3}"
-MIRROR_REPO="${GOLDPIN_DATA_MIRROR:-alisport1384/ST2}"
-FX_REPO="${GOLDPIN_FX_DATA_REPO:-alisport1384/ST3}"
-DEST="$(cd "$(dirname "$0")/.." && pwd)/datasets"
+OWNER_REPO="alisport1384/ST3"
+DEST="$(cd "$(dirname "$0")/.." && pwd)/local-data"
 
 # طلا — تگ data-v1
 TAG_XAU="data-v1"
@@ -67,8 +65,7 @@ fetch_one() {   # <prefix> <tag> <sha>
   fi
 
   local repo url
-  local repos=("$OWNER_REPO" "$MIRROR_REPO")
-  if [ "$prefix" = "gbpusd" ]; then repos=("$FX_REPO"); fi
+  local repos=("$OWNER_REPO")
   for repo in "${repos[@]}"; do
     url="https://github.com/$repo/releases/download/$tag/$file"
     echo "== دانلود $file  ←  $repo"

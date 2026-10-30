@@ -582,5 +582,5 @@ class MarketContext(
 | `docs/evidence_signals_v1.4.52.png` | نمودار «چه چیزی معنادار است» |
 | `docs/evidence_stability_v1.4.52.png` | نمودار پایداری ترکیب در چهار دوره |
 
-> عددهای این سند همه از اجرای همین اسکریپت‌ها روی `datasets/goldpin_xauusd_m1_20y.csv.gz`
+> عددهای این سند همه از اجرای همین اسکریپت‌ها روی `local-data/goldpin_xauusd_m1_20y.csv.gz`
 > (SHA-256: `ffbc7c1b…c830c9`) و جریان معاملات `sweep/v1.4.49/trades_20y_gate.csv` است.
