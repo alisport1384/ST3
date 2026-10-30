@@ -1,23 +1,23 @@
-# دیتاست‌های بک‌تست — طلا (XAUUSD) و پوند/دلار (GBPUSD)، کندل M1
+# دیتاست‌های بک‌تست — طلا، نفت و پوند/دلار، کندل M1
 
 داده‌ها **نه داخل APK و نه داخل مخزن** نگهداری می‌شوند؛ هر پنج برش به‌صورت asset در بخش
-[**Releases**](https://github.com/alisport1384/ST2/releases/tag/data-v1) با تگ `data-v1` منتشر شده‌اند و اپ هر بازه را پس از انتخاب کاربر جداگانه از همان‌جا دانلود می‌کند. مزیت: کلون مخزن چند مگابایت
+[**Releases**](https://github.com/alisport1384/ST3/releases/tag/data-v1) با تگ `data-v1` منتشر شده‌اند و اپ هر بازه را پس از انتخاب کاربر جداگانه از همان‌جا دانلود می‌کند. مزیت: کلون مخزن چند مگابایت
 است، نه چند صد مگابایت، و دانلود داخل اپ از CDN ریلیز سریع‌تر و پایدارتر است. دیتاست و نتیجهٔ اجرای بک‌تست هر بازه در فایل مستقل ذخیره می‌شود.
 
 | بازه | فایل | کندل | اندازهٔ فشرده | شروع UTC | پایان UTC | SHA-256 |
 |---|---|---:|---:|---|---|---|
-| ۱ سال | [`goldpin_xauusd_m1_1y.csv.gz`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) | 351,894 | 5,128,001 بایت | 2025-08-21 00:00 | 2026-08-20 23:59 | `15fffd94b9c1970080d6012ff2aa3ae307d18a872381c677e44d16b5fd08db44` |
-| ۲ سال | [`goldpin_xauusd_m1_2y.csv.gz`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) | 701,067 | 9,844,331 بایت | 2024-08-21 00:00 | 2026-08-20 23:59 | `873d4ffc765723abfada8ef55fbf8b9bb9c7432125187395972f51af94496e9f` |
-| ۳ سال | [`goldpin_xauusd_m1_3y.csv.gz`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) | 1,040,730 | 14,310,975 بایت | 2023-08-21 00:00 | 2026-08-20 23:59 | `56751049149f3df1ed134fdbc5e667ec57655f445edde5820ef9d9fed6697fcc` |
-| ۱۰ سال | [`goldpin_xauusd_m1_10y.csv.gz`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) | 3,402,126 | 43,314,146 بایت (حدود 41.3 MiB) | 2016-08-21 23:00 | 2026-08-20 23:59 | `c0e5c8d2151605db8d0cf1c75f3f1d6cca0ecc5304bad233f536ffe45d7f7881` |
-| ۲۰ سال | [`goldpin_xauusd_m1_20y.csv.gz`](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) | 6,563,723 | 77,779,089 بایت (حدود 74.2 MiB) | 2006-08-21 00:02 | 2026-08-20 23:59 | `ffbc7c1bd8723728714dfc2f476102f7887be3797d0caf187b622aa533c830c9` |
+| ۱ سال | [`goldpin_xauusd_m1_1y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) | 351,894 | 5,128,001 بایت | 2025-08-21 00:00 | 2026-08-20 23:59 | `15fffd94b9c1970080d6012ff2aa3ae307d18a872381c677e44d16b5fd08db44` |
+| ۲ سال | [`goldpin_xauusd_m1_2y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) | 701,067 | 9,844,331 بایت | 2024-08-21 00:00 | 2026-08-20 23:59 | `873d4ffc765723abfada8ef55fbf8b9bb9c7432125187395972f51af94496e9f` |
+| ۳ سال | [`goldpin_xauusd_m1_3y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) | 1,040,730 | 14,310,975 بایت | 2023-08-21 00:00 | 2026-08-20 23:59 | `56751049149f3df1ed134fdbc5e667ec57655f445edde5820ef9d9fed6697fcc` |
+| ۱۰ سال | [`goldpin_xauusd_m1_10y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) | 3,402,126 | 43,314,146 بایت (حدود 41.3 MiB) | 2016-08-21 23:00 | 2026-08-20 23:59 | `c0e5c8d2151605db8d0cf1c75f3f1d6cca0ecc5304bad233f536ffe45d7f7881` |
+| ۲۰ سال | [`goldpin_xauusd_m1_20y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) | 6,563,723 | 77,779,089 بایت (حدود 74.2 MiB) | 2006-08-21 00:02 | 2026-08-20 23:59 | `ffbc7c1bd8723728714dfc2f476102f7887be3797d0caf187b622aa533c830c9` |
 
 همهٔ فایل‌ها شامل سرستون و ردیف‌های `timestamp(ms,UTC),open,high,low,close,volume` هستند. حجم، tick volume منبع است. در برش ۲۰ساله کندل بی‌حجم، نامعتبر یا timestamp تکراری وجود ندارد؛ ۱٬۰۷۱ فاصلهٔ بیش از ۲۰ ساعت گزارش شده است. فایل `.meta.json` کنار دیتاست، آمار ساخت را ثبت می‌کند.
 
 ## رفتار اپ
 
 - از تنظیمات، بازهٔ ۱، ۲، ۳، ۱۰ یا ۲۰ سال را انتخاب و همان فایل را دانلود کنید؛ اپ اول از
-  `ST2/releases/download/data-v1` و در صورت خطا از آینهٔ `ST1` می‌گیرد؛ SHA-256 قبل از تأیید فایل بررسی می‌شود.
+  `ST3/releases/download/data-v1` و در صورت خطا از آینهٔ `ST2` می‌گیرد؛ SHA-256 قبل از تأیید فایل بررسی می‌شود.
 - برای اجرای بک‌تست، نشست داخلی را روشن کنید. با تغییر بازه، «اجرای مجدد» دیتاست انتخابی را بارگذاری می‌کند.
 - داده و نتیجهٔ هر بازه جدا هستند؛ حذف، دانلود یا اجرای یک بازه به بقیه دست نمی‌زند. هیچ دیتاستی داخل APK نیست.
 - برای تاریخچه‌های بلند، کندل‌ها با ستون‌های primitive نگه‌داری می‌شوند؛ زمان‌های دقیقه‌ای هم فشرده می‌شوند تا حافظهٔ کمتری مصرف شود.
@@ -41,7 +41,7 @@ python3 tools/build_long_sample.py --src /path/XAUUSD_OHLCV_1M.csv \
 هر فایل مستقیماً از Release قابل دانلود است — همین URLهایی که اپ استفاده می‌کند:
 
 ```bash
-BASE=https://github.com/alisport1384/ST2/releases/download/data-v1
+BASE=https://github.com/alisport1384/ST3/releases/download/data-v1
 curl -fLO $BASE/goldpin_xauusd_m1_1y.csv.gz
 curl -fLO $BASE/goldpin_xauusd_m1_2y.csv.gz
 curl -fLO $BASE/goldpin_xauusd_m1_3y.csv.gz
@@ -51,11 +51,25 @@ curl -fLO $BASE/goldpin_xauusd_m1_20y.csv.gz
 
 | برش | لینک دانلود | آینهٔ دوم |
 |---|---|---|
-| ۱ سال | [data-v1/1y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) |
-| ۲ سال | [data-v1/2y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) |
-| ۳ سال | [data-v1/3y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) |
-| ۱۰ سال | [data-v1/10y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
-| ۲۰ سال | [data-v1/20y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
+| ۱ سال | [data-v1/1y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_1y.csv.gz) |
+| ۲ سال | [data-v1/2y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_2y.csv.gz) |
+| ۳ سال | [data-v1/3y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_3y.csv.gz) |
+| ۱۰ سال | [data-v1/10y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
+| ۲۰ سال | [data-v1/20y](https://github.com/alisport1384/ST3/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) | [ST2](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
+
+## دیتاست‌های نفت — USOIL، کندل M1 (تگ `data-oil-v1`)
+
+هر پنج برش با حجم در [Release نفت ST3](https://github.com/alisport1384/ST3/releases/tag/data-oil-v1) قرار دارند؛ فایل‌های سالانه داخل مخزن و APK نیستند. اپ ابتدا از ST3 و در صورت خطا از Release اصلی ST2 دریافت می‌کند و SHA-256 را بررسی می‌کند. فایل‌ها بایت‌به‌بایت همان فایل‌های منتشرشدهٔ اصلی هستند.
+
+| بازه | فایل | تعداد کندل | بایت فشرده | SHA-256 |
+|---|---|---:|---:|---|
+| 1 سال | [`goldpin_usoil_m1_1y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-oil-v1/goldpin_usoil_m1_1y.csv.gz) | 347,718 | 4,073,006 | `616cb8f68ccce3793c529282a86e9500f1e16ea6e54b55376f07e44150bc8590` |
+| 2 سال | [`goldpin_usoil_m1_2y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-oil-v1/goldpin_usoil_m1_2y.csv.gz) | 689,491 | 7,545,461 | `78e4a8fdbce2fcd4a39a37f01f3e3a22ffb73cb70aa38cb25594c9447f7d6d0a` |
+| 3 سال | [`goldpin_usoil_m1_3y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-oil-v1/goldpin_usoil_m1_3y.csv.gz) | 1,033,192 | 11,087,423 | `9394e460c705bdcddc2b3a843beb8ff3769fb72e436565bb8cc84521afc6b21b` |
+| 10 سال | [`goldpin_usoil_m1_10y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-oil-v1/goldpin_usoil_m1_10y.csv.gz) | 3,361,756 | 35,630,197 | `7c1f7cb1be6bbb3033be3d6c96555a6cebc21b151e4bda1b2cb8fb0a352465ec` |
+| 20 سال | [`goldpin_usoil_m1_20y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-oil-v1/goldpin_usoil_m1_20y.csv.gz) | 6,829,560 | 69,076,333 | `cee6b304a900e6f0bc2d3a33ee201523c2905714d9ece805aeabfc9028ab6313` |
+
+ستون‌ها: `timestamp(ms,UTC),open,high,low,close,volume`؛ حجم، tick volume منبع تاریخی است. برای دانلود و کنترل هش با ابزار محلی: `./tools/fetch_datasets.sh oil`.
 
 ## دیتاست‌های پوند/دلار — GBPUSD، کندل M1 (تگ `data-fx-v1`)
 

@@ -627,10 +627,10 @@ object Feed {
     // ── دیتاست‌های بک‌تست داخلی (طرح B) ────────────────────────────────────────
     // فایل‌های ۱، ۲، ۳، ۱۰ و ۲۰ ساله **داخل مخزن نیستند**؛ از بخش Releases مخزن
     // GoldPin دانلود می‌شوند (تگ data-v1). این کار حجم clone را کم و سرعت دانلود اپ را
-    // بیشتر می‌کند. آینهٔ دوم (ST1) در صورت خطای شبکه امتحان می‌شود.
+    // بیشتر می‌کند. آینهٔ دوم (ST2) در صورت خطای شبکه امتحان می‌شود.
     const val DATA_RELEASE_TAG = "data-v1"
-    const val DATA_RELEASE_BASE = "https://github.com/alisport1384/ST2/releases/download/data-v1"
-    const val DATA_RELEASE_MIRROR = "https://github.com/alisport1384/ST1/releases/download/data-v1"
+    const val DATA_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-v1"
+    const val DATA_RELEASE_MIRROR = "https://github.com/alisport1384/ST2/releases/download/data-v1"
 
     const val BACKTEST_DATA_URL = "$DATA_RELEASE_BASE/goldpin_xauusd_m1_1y.csv.gz"
     const val BACKTEST_DATA_FALLBACK_URL = "$DATA_RELEASE_MIRROR/goldpin_xauusd_m1_1y.csv.gz"
@@ -670,8 +670,8 @@ object Feed {
     //  منبع خام: مخزن عمومی parshant65-lang/WTI-Crude-Oil-1m-* (OHLCV یک‌دقیقه‌ای با حجم تیکی).
     //  بازه‌ها همان ۱/۲/۳/۱۰/۲۰ سال طلا هستند تا رابط و مقایسه یک‌شکل بماند.
     const val OIL_RELEASE_TAG = "data-oil-v1"
-    const val OIL_RELEASE_BASE = "https://github.com/alisport1384/ST2/releases/download/data-oil-v1"
-    const val OIL_RELEASE_MIRROR = "https://github.com/alisport1384/ST1/releases/download/data-oil-v1"
+    const val OIL_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-oil-v1"
+    const val OIL_RELEASE_MIRROR = "https://github.com/alisport1384/ST2/releases/download/data-oil-v1"
 
     val BACKTEST_DATASETS_OIL = listOf(
         BacktestDatasetSpec(1, 347_718, 4_073_006L,

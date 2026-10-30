@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.Assume.assumeTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -23,8 +24,10 @@ class StorageBundledDataTest {
     fun backtestDatasetsAreNotBundledInApk() {
         val names = RuntimeEnvironment.getApplication().assets.list("").orEmpty().toSet()
         for (years in listOf(1, 2, 3, 10, 20)) {
-            assertFalse("Compressed ${years}-year dataset must stay outside the APK",
-                names.contains("goldpin_xauusd_m1_${years}y.csv.gz"))
+            for (symbol in listOf("xauusd", "usoil", "gbpusd")) {
+                assertFalse("Compressed $symbol ${years}-year dataset must stay outside the APK",
+                    names.contains("goldpin_${symbol}_m1_${years}y.csv.gz"))
+            }
         }
         assertFalse("Expanded one-year dataset must stay outside the APK",
             names.contains("goldpin_xauusd_m1_1y.csv"))
@@ -73,9 +76,11 @@ class StorageBundledDataTest {
         val file = listOf(
             File("datasets/goldpin_xauusd_m1_10y.csv.gz"),
             File("../datasets/goldpin_xauusd_m1_10y.csv.gz")
-        ).firstOrNull { it.isFile } ?: error("10-year dataset is missing from the repository")
+        ).firstOrNull { it.isFile }
+        assumeTrue("Optional 10-year release asset not downloaded", file != null)
+        val dataFile = file ?: return
         val spec = Feed.backtestDataset(10)
-        val bars = file.inputStream().use { Feed.parseBacktestStream(it, spec) }
+        val bars = dataFile.inputStream().use { Feed.parseBacktestStream(it, spec) }
         assertEquals(3_402_126, bars.size)
         assertEquals(1_471_820_400_000L, bars[0].t)
         assertEquals(1_787_270_340_000L, bars.last().t)
@@ -89,8 +94,10 @@ class StorageBundledDataTest {
         val file = listOf(
             File("datasets/goldpin_xauusd_m1_20y.csv.gz"),
             File("../datasets/goldpin_xauusd_m1_20y.csv.gz")
-        ).firstOrNull { it.isFile } ?: error("20-year dataset is missing from the repository")
-        val bars = file.inputStream().use { Feed.parseBacktestStream(it, Feed.backtestDataset(20)) }
+        ).firstOrNull { it.isFile }
+        assumeTrue("Optional 20-year release asset not downloaded", file != null)
+        val dataFile = file ?: return
+        val bars = dataFile.inputStream().use { Feed.parseBacktestStream(it, Feed.backtestDataset(20)) }
         assertEquals(6_563_723, bars.size)
         assertEquals(1_156_118_520_000L, bars[0].t)
         assertEquals(1_787_270_340_000L, bars.last().t)
@@ -101,12 +108,23 @@ class StorageBundledDataTest {
     }
 
     @Test
+    fun allSymbolsUseSt3ReleaseAssetsForAnnualDownloads() {
+        val symbols = mapOf("XAUUSD" to "data-v1", "USOIL" to "data-oil-v1", "GBPUSD" to "data-fx-v1")
+        for ((symbol, tag) in symbols) {
+            val files = Feed.datasetsFor(symbol)
+            assertEquals(listOf(1, 2, 3, 10, 20), files.map { it.years })
+            assertTrue(files.all { it.url.startsWith("https://github.com/alisport1384/ST3/releases/download/$tag/") })
+            assertTrue(files.all { it.sha256.length == 64 })
+        }
+    }
+
+    @Test
     fun datasetCatalogIncludesVerifiedOneTwoThreeTenAndTwentyYearRanges() {
         assertEquals(listOf(1, 2, 3, 10, 20), Feed.BACKTEST_DATASETS.map { it.years })
         assertEquals(listOf(351_894, 701_067, 1_040_730, 3_402_126, 6_563_723), Feed.BACKTEST_DATASETS.map { it.bars })
         assertTrue(Feed.BACKTEST_DATASETS.all { it.sha256.length == 64 && it.url.startsWith("https://") })
         // از نسخهٔ ۱٫۴٫۵۰ هیچ دیتاستی داخل مخزن نیست؛ همه از Release تگ data-v1 می‌آیند
-        // و هر برش یک آینهٔ دوم (ST1) دارد.
+        // و هر برش یک آینهٔ دوم (ST2) دارد.
         assertTrue(Feed.BACKTEST_DATASETS.all { it.url.startsWith(Feed.DATA_RELEASE_BASE + "/") })
         assertTrue(Feed.BACKTEST_DATASETS.all {
             it.fallbackUrl != null && it.fallbackUrl!!.startsWith(Feed.DATA_RELEASE_MIRROR + "/")

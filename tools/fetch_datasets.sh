@@ -10,7 +10,8 @@
 #   ./tools/fetch_datasets.sh 1y 10y          # فقط برش‌های خواسته‌شدهٔ طلا
 #   ./tools/fetch_datasets.sh fx              # هر پنج برش پوند/دلار
 #   ./tools/fetch_datasets.sh fx 1y 20y       # فقط دو برش پوند
-#   ./tools/fetch_datasets.sh all             # هر دو نماد، هر ده فایل
+#   ./tools/fetch_datasets.sh oil             # هر پنج برش نفت
+#   ./tools/fetch_datasets.sh all             # هر سه نماد، هر پانزده فایل
 #
 # ⚠ SHAها را هرگز دستی ننویسید: از `datasets/fx_gbpusd_summary.json` و
 #   `datasets/*.meta.json` کپی می‌شوند و آزمون‌های `Repository*DataTest` همان‌ها را قفل
@@ -18,8 +19,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-OWNER_REPO="${GOLDPIN_DATA_REPO:-alisport1384/ST2}"
-MIRROR_REPO="${GOLDPIN_DATA_MIRROR:-alisport1384/ST1}"
+OWNER_REPO="${GOLDPIN_DATA_REPO:-alisport1384/ST3}"
+MIRROR_REPO="${GOLDPIN_DATA_MIRROR:-alisport1384/ST2}"
 FX_REPO="${GOLDPIN_FX_DATA_REPO:-alisport1384/ST3}"
 DEST="$(cd "$(dirname "$0")/.." && pwd)/datasets"
 
@@ -31,6 +32,16 @@ declare -A SHA_XAU=(
   [3y]=56751049149f3df1ed134fdbc5e667ec57655f445edde5820ef9d9fed6697fcc
   [10y]=c0e5c8d2151605db8d0cf1c75f3f1d6cca0ecc5304bad233f536ffe45d7f7881
   [20y]=ffbc7c1bd8723728714dfc2f476102f7887be3797d0caf187b622aa533c830c9
+)
+
+# نفت — تگ data-oil-v1 (هش‌های فایل‌های موجود در Release اصلی)
+TAG_OIL="data-oil-v1"
+declare -A SHA_OIL=(
+  [1y]=616cb8f68ccce3793c529282a86e9500f1e16ea6e54b55376f07e44150bc8590
+  [2y]=78e4a8fdbce2fcd4a39a37f01f3e3a22ffb73cb70aa38cb25594c9447f7d6d0a
+  [3y]=9394e460c705bdcddc2b3a843beb8ff3769fb72e436565bb8cc84521afc6b21b
+  [10y]=7c1f7cb1be6bbb3033be3d6c96555a6cebc21b151e4bda1b2cb8fb0a352465ec
+  [20y]=cee6b304a900e6f0bc2d3a33ee201523c2905714d9ece805aeabfc9028ab6313
 )
 
 # پوند/دلار — تگ data-fx-v1 (منبع: OANDA M1 روی Hugging Face)
@@ -83,9 +94,10 @@ for a in "${args[@]}"; do
   case "$a" in
     xau|gold)            syms+=(xauusd) ;;
     fx|gbpusd)           syms+=(gbpusd) ;;
-    all)                 syms+=(xauusd gbpusd) ;;
+    oil|usoil)           syms+=(usoil) ;;
+    all)                 syms+=(xauusd usoil gbpusd) ;;
     1y|2y|3y|10y|20y)    ranges+=("$a") ;;
-    *) echo "!! آرگومان ناشناخته: $a  (xau | fx | all | 1y | 2y | 3y | 10y | 20y)" >&2; exit 2 ;;
+    *) echo "!! آرگومان ناشناخته: $a  (xau | oil | fx | all | 1y | 2y | 3y | 10y | 20y)" >&2; exit 2 ;;
   esac
 done
 [ ${#syms[@]}   -eq 0 ] && syms=(xauusd)
@@ -93,11 +105,11 @@ done
 
 for sym in "${syms[@]}"; do
   for t in "${ranges[@]}"; do
-    if [ "$sym" = "gbpusd" ]; then
-      fetch_one gbpusd "$TAG_FX" "${SHA_FX[$t]}" "$t"
-    else
-      fetch_one xauusd "$TAG_XAU" "${SHA_XAU[$t]}" "$t"
-    fi
+    case "$sym" in
+      gbpusd) fetch_one gbpusd "$TAG_FX" "${SHA_FX[$t]}" "$t" ;;
+      usoil)  fetch_one usoil "$TAG_OIL" "${SHA_OIL[$t]}" "$t" ;;
+      xauusd) fetch_one xauusd "$TAG_XAU" "${SHA_XAU[$t]}" "$t" ;;
+    esac
   done
 done
 
