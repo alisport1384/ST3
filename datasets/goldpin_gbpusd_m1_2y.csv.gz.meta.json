@@ -1,0 +1,20 @@
+{
+  "bars": 738328,
+  "bytesGz": 8148903,
+  "sha256": "547d84e1faf31bc5930460ac8c07f52f4b5c065b7e6107fc1ffe12dd7189b56e",
+  "fromUtc": "2024-08-21T00:00:00+00:00",
+  "toUtc": "2026-08-20T23:59:00+00:00",
+  "droppedWeekend": 3170,
+  "droppedDup": 0,
+  "badOhlc": 0,
+  "zeroVolumeBars": 0,
+  "gapsOverHours": 108,
+  "file": "goldpin_gbpusd_m1_2y.csv.gz",
+  "symbol": "GBPUSD",
+  "years": 2,
+  "source": "OANDA 1-minute candles via Hugging Face dataset bunqi/OANDA_GBPUSD_GBPUSD",
+  "volumeUnit": "ticks per minute (OANDA tick volume)",
+  "timezone": "UTC",
+  "columns": "timestamp(ms,UTC),open,high,low,close,volume",
+  "builtAtUtc": "2026-10-30T09:40:07Z"
+}

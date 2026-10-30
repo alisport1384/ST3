@@ -77,7 +77,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
     var baseTfSec: Int = Tf.M1
     var chartTfSec: Int = Tf.M1
     var depth: Int = 3                 // ۱=کوتاه ، ۲=متوسط ، ۳=عمیق (نسخهٔ ۷: پیش‌فرض عمیق)
-    var useSyntheticVolume: Boolean = true
+    var useSyntheticVolume: Boolean = spec.id != "GBPUSD"
     var livePollMs: Long = 10000L
     var liveRunning: Boolean = false
     var lastLivePrice: Double = Double.NaN
@@ -677,10 +677,10 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
                 parts.add("${Fa.d(st.windowBlocked.toString())} مسلح‌شدن بیرون پنجرهٔ سفارش‌گیری (۰۱:۳۰–۲۰:۰۰ UTC) رد شد")
             }
             if (st.slNBlocked > 0) {
-                parts.add("${Fa.d(st.slNBlocked.toString())} سفارش با سقف حد ضرر N=${Fa.n(cfg.maxSlUnits, 2)} رد شد")
+                parts.add("${Fa.d(st.slNBlocked.toString())} سفارش با سقف حد ضرر N=${Fa.n(cfg.maxSlUnits, spec.decimals)} رد شد")
             }
             if (st.slMinBlocked > 0) {
-                parts.add("${Fa.d(st.slMinBlocked.toString())} سفارش با حداقل فاصلهٔ حد ضرر ${Fa.n(cfg.minSlUnits, 2)} رد شد")
+                parts.add("${Fa.d(st.slMinBlocked.toString())} سفارش با حداقل فاصلهٔ حد ضرر ${Fa.n(cfg.minSlUnits, spec.decimals)} رد شد")
             }
             if (engine.processed == 0) parts.add("هیچ کندلی به موتور نرسید")
         }
@@ -797,6 +797,20 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
         if (cfg.cmsnAuto && cfg.cmsnAutoValue > 0.0) cfg.cmsnAutoValue else Math.max(0.0, cfg.cmsnManual)
 
     /**
+     * گرد کردن یک عددِ **واحد قیمت** به رقم اعشار نماد.
+     *
+     * ⚠ تا ۱٫۵٫۰۳ این کار در چند جا با `× ۱۰ ÷ ۱۰` (یک رقم اعشار) انجام می‌شد که برای
+     * طلای دو‌رقمی درست بود. روی پوند با تیک ۰٫۰۰۰۰۱، مثلاً `suggestedMinSlUnits` مقدار
+     * ۰٫۰۰۰۲۸ را به **۰٫۰** گرد می‌کرد ⇒ فیلتر کارمزد بی‌صدا خاموش می‌شد و هیچ سفارشی
+     * رد نمی‌شد. طلا و نفت ضریب ۱ دارند، پس این توابع برای آن‌ها دقیقاً رفتار قبلی‌اند.
+     */
+    fun roundForSymbol(v: Double): Double =
+        if (Symbols.scale(spec).isIdentity) Math.round(v * 10.0) / 10.0 else Symbols.roundUnits(spec, v)
+
+    /** گرد کردن یک آستانهٔ درصدی (ATR٪) — سه رقم اعشار برای همهٔ نمادها. */
+    fun roundPct(v: Double): Double = Math.round(v * 1000.0) / 1000.0
+
+    /**
      * حداقل فاصلهٔ حد ضرر پیشنهادی از روی کارمزد واقعی.
      *
      * کارمزد هر معامله بر حسب R برابر `cmsn / R` است (چون حجم با ۱/R مقیاس می‌شود). پس برای
@@ -806,7 +820,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
     fun suggestedMinSlUnits(costRatioInR: Double = 0.25): Double {
         val cmsn = effectiveCmsn()
         if (cmsn <= 0.0 || costRatioInR <= 0.0) return 0.0
-        return Math.round(cmsn / costRatioInR * 10.0) / 10.0
+        return roundForSymbol(cmsn / costRatioInR)
     }
 
     /**
@@ -818,29 +832,48 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
         val cmsn = effectiveCmsn()
         if (cmsn <= 0.0) return "اول کارمزد/اسپرد واقعی را وارد کنید (۰ ⇒ تطبیق معنا ندارد)"
         val minSl = suggestedMinSlUnits()
-        val before = "min=${Fa.n(cfg.minSlUnits, 2)} N=${Fa.n(cfg.maxSlUnits, 2)} ضریب=${Fa.n(cfg.minSlCostMult, 2)}"
+        val before = "min=${Fa.n(cfg.minSlUnits, spec.decimals)} N=${Fa.n(cfg.maxSlUnits, spec.decimals)} ضریب=${Fa.n(cfg.minSlCostMult, 2)}"
         cfg.minSlUnits = minSl
-        // سقف N باید از حداقل بزرگ‌تر باشد وگرنه هیچ سفارشی باقی نمی‌ماند
-        if (cfg.maxSlUnits <= cfg.minSlUnits) cfg.maxSlUnits = Math.round((cfg.minSlUnits + 3.0) * 10.0) / 10.0
+        // سقف N باید از حداقل بزرگ‌تر باشد وگرنه هیچ سفارشی باقی نمی‌ماند.
+        // ⚠ «۳ واحد» یک عدد **مطلقِ طلا** است (۳ دلار روی قیمت ۴٬۰۰۰). اگر همان ۳ روی
+        // پوند می‌رفت، سقف N از ۰٫۰۰۶۷ به ۳٫۰ می‌رسید = ۲۲۰٪ قیمت، یعنی هیچ ستاپی دیگر
+        // با سقف N رد نمی‌شد. پس سرِ‌فاصله با ضریبِ واحدِ خودِ نماد مقیاس می‌شود.
+        val headRoom = 3.0 * Symbols.scale(spec).unit
+        if (cfg.maxSlUnits <= cfg.minSlUnits) cfg.maxSlUnits = roundForSymbol(cfg.minSlUnits + headRoom)
         // ضریب فیلتر کارمزد (§۵-۳) معادل همان حداقل است: mult = minSl / cmsn
         cfg.minSlCostMult = Math.round(minSl / cmsn * 10.0) / 10.0
-        Log.i(Log.CAT_CFG, "تطبیق با کارمزد", "cmsn=${Fa.n(cmsn, 2)} $before → min=${Fa.n(cfg.minSlUnits, 2)} N=${Fa.n(cfg.maxSlUnits, 2)}")
+        Log.i(Log.CAT_CFG, "تطبیق با کارمزد", "cmsn=${Fa.n(cmsn, spec.decimals)} $before → min=${Fa.n(cfg.minSlUnits, spec.decimals)} N=${Fa.n(cfg.maxSlUnits, spec.decimals)}")
         rebuildAsync()
-        return "کارمزد ${Fa.n(cmsn, 2)} ⇒ حداقل فاصلهٔ حد ضرر ${Fa.n(cfg.minSlUnits, 2)}، سقف N=${Fa.n(cfg.maxSlUnits, 2)}، " +
+        return "کارمزد ${Fa.n(cmsn, spec.decimals)} ⇒ حداقل فاصلهٔ حد ضرر ${Fa.n(cfg.minSlUnits, spec.decimals)}، سقف N=${Fa.n(cfg.maxSlUnits, spec.decimals)}، " +
             "ضریب فیلتر ${Fa.n(cfg.minSlCostMult, 2)} (هزینه ≤ ۲۵٪ R)"
     }
 
     /** اعمال یک پیش‌تنظیم تطبیق؛ متن نتیجه برای نمایش برمی‌گردد. */
     fun applyAdaptPreset(p: AdaptPreset): String {
+        // ── بازمقیاس‌کردن پیش‌تنظیم از طلا به نماد فعال ───────────────────────────
+        //  جدول پیش‌تنظیم‌ها ([AdaptPresets]) با اعداد **طلا** نوشته و جارو شده است و
+        //  عمداً دست‌نخورده می‌ماند (آزمون `AdaptPresetsTest` همان اعداد را قفل کرده).
+        //  آنچه اینجا مقیاس می‌گیرد فقط **اعمال** آن‌هاست: عددهای «واحد قیمت» با ضریب
+        //  واحد، عددهای تیکی با ضریب تیک، و آستانه‌های ATR٪ با ضریب درصد. برای طلا و
+        //  نفت [Symbols.SCALE_NONE] است ⇒ هر سه ضریب ۱ و رفتار دقیقاً مثل قبل.
+        //  ⚠ عددهایی که **ذاتاً بی‌مقیاس‌اند** دست نمی‌خورند: targetR، ضریب‌های R در
+        //  مدیریت/تریل، `cxBoxMinUnits` (در موتور در ATR ضرب می‌شود)، ضریب فیلتر
+        //  کارمزد (نسبت است) و `slAtrMult` (خودش ضریب ATR است).
+        val sc = Symbols.scale(spec)
+        val u = { v: Double -> if (sc.isIdentity) v else roundForSymbol(v * sc.unit) }
+        val tk = { v: Double -> if (sc.isIdentity) v else Math.round(v * sc.ticks * 100.0) / 100.0 }
+        val pc = { v: Double -> if (sc.isIdentity) v else roundPct(v * sc.pct) }
+        val mn = { v: Double -> if (sc.isIdentity) v else v * sc.money }
+
         cfg.strategy = p.strategy
         cfg.mmMode = p.mm
         cfg.trigger2Fade = p.fade
         cfg.trigger2TargetR = p.targetR
-        cfg.tpUnits = p.tpUnits
+        cfg.tpUnits = u(p.tpUnits)
         cfg.minSlCostMult = p.costMult
-        cfg.minSlUnits = p.minSl
-        cfg.maxSlUnits = p.maxSl
-        cfg.slBufTicks = p.slBufTicks
+        cfg.minSlUnits = u(p.minSl)
+        cfg.maxSlUnits = u(p.maxSl)
+        cfg.slBufTicks = tk(p.slBufTicks)
         cfg.entryBufTicks = p.entryBufTicks
         // مود تایم‌فریم پیش‌تنظیم (اگر با مود فعلی فرق دارد، هر چهار تایم‌فریم با هم عوض می‌شوند)
         val tfm = TF_MODES.firstOrNull { it.idx == p.tfIdx }
@@ -858,18 +891,18 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
         cfg.guardDDPct = p.guardDD
         cfg.guardHardDDPct = p.guardHardDD
         cfg.guardRiskScale = p.guardScale
-        cfg.minAtrPct = p.minAtrPct
+        cfg.minAtrPct = pc(p.minAtrPct)
         // مکانیزم ۱٫۴٫۵۱: سیستم مدیریت معاملهٔ باز
         cfg.mgmtMode = p.mgmtMode
         cfg.mgmtHoldMinR = p.holdMinR
         cfg.mgmtHoldMaxDays = p.holdDays
         cfg.mgmtTrailStartR = p.trailStartR
         cfg.mgmtTrailDistR = p.trailDistR
-        cfg.mgmtVolGatePct = p.mgmtVolGate
+        cfg.mgmtVolGatePct = pc(p.mgmtVolGate)
         // موتور ترکیبی (۱٫۴٫۵۲) — پیش‌تنظیم‌های قدیمی cxMode=0 دارند ⟹ رفتار ۱٫۴٫۵۱ دست‌نخورده
         cfg.cxMode = p.cxMode
-        cfg.cxRegimeGate = p.cxGate
-        cfg.cxRegimeGateCalm = p.cxGateCalm
+        cfg.cxRegimeGate = pc(p.cxGate)
+        cfg.cxRegimeGateCalm = pc(p.cxGateCalm)
         cfg.cxBoxMinUnits = p.cxBox
         cfg.cxSizeMode = p.cxSize
         cfg.cxCompoundCap = p.cxCap
@@ -877,7 +910,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
         cfg.cxSlWidenMax = p.cxWiden
         cfg.cxTrailRegime2 = p.cxTrail2
         cfg.cmsnAuto = false
-        cfg.cmsnManual = p.cmsn
+        cfg.cmsnManual = mn(p.cmsn)
         // ۱٫۵٫۰۲: اگر بروکر ست شده باشد، کارمزدِ پروفایل بروکر بر عدد ثابتِ پیش‌تنظیم
         // اولویت دارد (وگرنه زدن یک پیش‌تنظیم، ست‌کردن بروکر را بی‌اثر می‌کرد).
         val bk = Brokers.byId(cfg.brokerId)
@@ -887,7 +920,9 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
                 "${p.id}: ${Fa.n(p.cmsn, 4)} → ${Fa.n(c2, 4)} (${bk.id})")
         }
         Log.i(Log.CAT_CFG, "پیش‌تنظیم تطبیق اعمال شد",
-            "${p.id} strategy=${p.strategy} mm=${MoneyMode.label(p.mm)} fade=${p.fade} k=${p.targetR} minSl=${p.minSl} N=${p.maxSl}")
+            "${p.id} نماد=${spec.id} strategy=${p.strategy} mm=${MoneyMode.label(p.mm)} fade=${p.fade} " +
+                "k=${p.targetR} minSl=${Fa.n(cfg.minSlUnits, 5)} N=${Fa.n(cfg.maxSlUnits, 5)} " +
+                "مقیاس(unit=${sc.unit} tick=${sc.ticks} pct=${sc.pct} money=${sc.money})")
         ensureBrokerSpread()
         rebuildAsync()
         return "${p.label}\n${p.note}"
@@ -963,6 +998,19 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
     /** استثنای داخلی لغو — فقط همان مسیر اجرا را می‌بندد. */
     class BacktestCancelledException : RuntimeException("بک‌تست به درخواست کاربر لغو شد")
 
+    /** بهترین ردیف آموزش جاروب ۲۰ساله؛ خارج از نمونه زیان‌ده بوده است. */
+    fun applyFxResearchCandidate(): String {
+        if (spec.id != "GBPUSD") return "فقط برای GBPUSD"
+        Symbols.applyDefaults(cfg, spec, refPrice())
+        val tf = TF_MODES.first { it.idx == 1 }
+        cfg.tfMode = tf.idx; cfg.tfS = tf.s; cfg.tfM = tf.m; cfg.tf1 = tf.t1; cfg.tf2 = tf.t2
+        cfg.slBufMode = 1; cfg.slAtrMult = 2.5
+        cfg.maxSlMode = 1; cfg.maxSlAtrMult = 6.25
+        cfg.minAtrPct = 0.0; cfg.guardMode = 1; cfg.guardDDPct = 12.0
+        rebuildAsync()
+        return "تنظیم پژوهشی اعمال شد؛ اعتبارسنجی خارج از نمونه منفی بود و سود تضمین نیست."
+    }
+
     /** لغو نرم بهینه‌سازی (بین دو ترکیب بررسی می‌شود). */
     fun cancelOptimize() {
         if (optimizing) { optimizeCancel = true; optimizeProgress = "در حال لغو…"; notifyUi() }
@@ -972,7 +1020,10 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
     private fun lastMonthsSlice(src: List<Candle>, months: Int): List<Candle> {
         if (src.isEmpty()) return src
         val endT = src.last().t
-        val fromT = endT - months * 30L * 24L * 3_600_000L
+        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+        cal.timeInMillis = endT
+        cal.add(java.util.Calendar.MONTH, -months)
+        val fromT = cal.timeInMillis
         var i = 0
         // جست‌وجوی دودویی روی زمان شروع کندل‌ها
         var lo = 0; var hi = src.size - 1; var idx = 0
@@ -991,7 +1042,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
      */
     fun deepOptimizeAsync(months: Int = optimizeMonths, onDone: (String) -> Unit = {}) {
         if (optimizing) { onDone("بهینه‌ساز همین حالا در حال اجراست"); return }
-        optimizeMonths = months.coerceIn(1, 60)
+        optimizeMonths = months.coerceIn(1, 240)
         val src = if (modeCandles.isNotEmpty()) modeCandles else candles
         if (src.size < 20_000) {
             onDone("دادهٔ کافی برای بهینه‌سازی نیست — اول تاریخچه را بارگذاری/دانلود کنید")
@@ -2227,6 +2278,31 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
         }
     }
 
+    /** واردکردن دیتاست gzip از فایل انتخابی، با همان کنترل هش دانلود. */
+    fun importBacktestData(ctx: Context, uri: android.net.Uri, years: Int, onDone: (String) -> Unit = {}) {
+        val ds = Feed.backtestDataset(years, spec.id)
+        io.execute {
+            busy = true; busyText = "در حال واردکردن دادهٔ بک‌تست…"; notifyUi()
+            val part = Storage.dataPartFile(ctx, years, spec.id)
+            val msg = try {
+                ctx.contentResolver.openInputStream(uri)?.use { input ->
+                    part.outputStream().buffered().use { output -> input.copyTo(output) }
+                } ?: throw FeedException("فایل انتخاب‌شده خوانده نشد")
+                val hash = Feed.sha256(part)
+                if (!hash.equals(ds.sha256, ignoreCase = true))
+                    throw FeedException("هش فایل با نماد و بازهٔ انتخاب‌شده مطابقت ندارد")
+                val dest = Storage.dataFile(ctx, years, spec.id)
+                if (!part.renameTo(dest)) { part.copyTo(dest, overwrite = true); part.delete() }
+                "دادهٔ ${spec.id} برای ${years} سال با بررسی هش وارد شد."
+            } catch (e: Exception) {
+                part.delete(); "خطای واردکردن داده: ${e.message}"
+            } finally {
+                busy = false; busyText = ""
+            }
+            main.post { notifyUi(); onDone(msg) }
+        }
+    }
+
     /** پاک کردن دیتاست انتخاب‌شده (نتیجهٔ بک‌تست حذف نمی‌شود). */
     fun deleteBacktestData(ctx: Context, years: Int = selectedBacktestYears): String {
         var n = 0
@@ -2800,7 +2876,7 @@ class AppState(val spec: SymbolSpec = Symbols.GOLD) {
 
     companion object {
         /** نسخهٔ نمایشی — تنها منبع حقیقت برای هدر لاگ. با `versionName` در build.gradle یکی نگه دارید. */
-        const val APP_VERSION = "1.5.03"
+        const val APP_VERSION = "1.5.05"
 
         /**
          * «نمونهٔ» سازگاری: کد رابط همه‌جا `AppState.instance` را می‌خواند و باید

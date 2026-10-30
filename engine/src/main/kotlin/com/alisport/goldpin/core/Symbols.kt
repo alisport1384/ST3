@@ -28,6 +28,8 @@ package com.alisport.goldpin.core
  * @param tick اندازهٔ یک تیک قیمت (واحد پول)
  * @param oil پروفایل نفتی؟ (برای انتخاب پیش‌فرض‌ها و مسیر قیمت لحظه‌ای)
  */
+enum class SymbolKind { METAL, OIL, FX }
+
 data class SymbolSpec(
     val id: String,
     val label: String,
@@ -35,10 +37,22 @@ data class SymbolSpec(
     val unit: String,
     val decimals: Int,
     val tick: Double,
-    val oil: Boolean = false
+    val kind: SymbolKind = SymbolKind.METAL,
+    /**
+     * نماد یاهو برای **قیمت نقدی** وقتی [feedSymbol] یک قرارداد آتی است و حجم واقعی ندارد.
+     * `null` ⇒ خودِ [feedSymbol] (رفتار قدیمی طلا و نفت، بدون هیچ تغییر).
+     */
+    val spotSymbol: String? = null
 ) {
+    /** پروفایل نفتی؟ (کلیدهای قدیمی همه‌جا همین را می‌خوانند) */
+    val oil: Boolean get() = kind == SymbolKind.OIL
+
     /** عنوان کوتاه برای تب مدیریت */
-    val short: String get() = if (oil) "نفت" else "طلا"
+    val short: String get() = when (kind) {
+        SymbolKind.OIL -> "نفت"
+        SymbolKind.FX -> "پوند"
+        SymbolKind.METAL -> "طلا"
+    }
 }
 
 object Symbols {
@@ -50,7 +64,7 @@ object Symbols {
         unit = "اونس",
         decimals = 2,
         tick = 0.01,
-        oil = false
+        kind = SymbolKind.METAL
     )
 
     /**
@@ -64,10 +78,32 @@ object Symbols {
         unit = "بشکه",
         decimals = 2,
         tick = 0.01,
-        oil = true
+        kind = SymbolKind.OIL
     )
 
-    val ALL: List<SymbolSpec> = listOf(GOLD, OIL)
+    /**
+     * پوند/دلار — نماد سوم، با همان ساختار طلا و نفت.
+     *
+     *  • `feedSymbol = "6B=F"` (فیوچرز پوند CME) چون تنها نماد یاهو است که **حجم واقعی**
+     *    دارد؛ استراتژی‌های این اپ (باکس ولوم کم/زیاد) بدون حجم کار نمی‌کنند، درست مثل
+     *    طلایی که با `GC=F` می‌رود و نه با `XAUUSD=X`.
+     *  • `spotSymbol = "GBPUSD=X"` شناسهٔ نقدی است؛ دادهٔ کندل و قیمت زنده از فیوچرز
+     *    می‌آیند و این دو ابزار یکسان نیستند. قیمت نقدی هرگز به کندل آتی تزریق نمی‌شود.
+     *    قیمت و حجم آتی الزاماً معادل جریان نقدی بروکر نیست.
+     *  • یک تیک = ۰٫۰۰۰۰۱ (یک «پوینت» در قرارداد رسمی آلپاری) و قیمت با ۵ رقم اعشار.
+     */
+    val GBPUSD = SymbolSpec(
+        id = "GBPUSD",
+        label = "پوند/دلار — GBPUSD",
+        feedSymbol = "6B=F",
+        unit = "پوند",
+        decimals = 5,
+        tick = 0.00001,
+        kind = SymbolKind.FX,
+        spotSymbol = "GBPUSD=X"
+    )
+
+    val ALL: List<SymbolSpec> = listOf(GOLD, OIL, GBPUSD)
 
     fun byId(id: String?): SymbolSpec = ALL.firstOrNull { it.id == id } ?: GOLD
 
@@ -178,8 +214,21 @@ object Symbols {
     fun applyDefaults(s: Settings, spec: SymbolSpec, price: Double = 0.0, brokerId: String? = null): Double {
         val profile = Brokers.byId(brokerId ?: s.brokerId) ?: Brokers.default
         val px = if (price > 0.0) price else Brokers.fallbackPrice(spec.id)
-        val cost = Brokers.costPerUnit(profile, spec.id, px) ?: if (spec.oil) DEFAULT_OIL_CMSN else Tuned.CMSN
-        if (spec.oil) applyOilDefaults(s, cost) else applyGoldDefaults(s, cost)
+        val cost = Brokers.costPerUnit(profile, spec.id, px) ?: fallbackCost(spec)
+        applyKindDefaults(s, spec, cost)
+        // سواپ شبانه هم در مسیر «نصب تازه» اعمال می‌شود. پیش‌تر فقط [applyBrokerCost]
+        // آن را می‌گذاشت، پس روی نصب تازه `swapEnabled=true` می‌ماند با `swapLong/Short = 0`
+        // — یعنی سواپ **بی‌صدا** صفر حساب می‌شد تا وقتی کاربر دستی بروکر را ست کند.
+        if (spec.kind == SymbolKind.FX) applySwap(s, spec, profile)
+        // ⚠ باگ مسیر «نصب تازه» که در ۱٫۵٫۰۲ نیمه‌کاره ماند: `applyBrokerCost` آستانهٔ
+        // **مطلق** فیلتر کارمزد نفت را از نو نرمال می‌کرد ولی اینجا ضریب روی همان ۸٫۰
+        // ثابت رها می‌شد. با کارمزد رسمی نفت (۰٫۰۱۵۰۶) آستانه به ۰٫۱۲ دلار می‌افتاد،
+        // یعنی فیلتر عملاً خاموش — همان چیزی که آزمون «آستانهٔ فیلتر کارمزد همان ۲٫۴
+        // دلار می‌ماند» ردش می‌کرد. طلا و پوند چون `Tuned.COST_MULT = 0` دارند (فیلتر
+        // خاموش) دست‌نخورده می‌مانند.
+        if (spec.oil && cost > 0.0) {
+            s.minSlCostMult = Math.round(OIL_COST_FLOOR_UNITS / cost * 10.0) / 10.0
+        }
         s.brokerId = profile.id
         s.brokerRefPrice = px
         s.brokerAppliedAt = System.currentTimeMillis()
@@ -203,16 +252,7 @@ object Symbols {
         s.brokerAppliedAt = System.currentTimeMillis()
         s.cmsnAuto = false
         s.cmsnManual = cost
-        // سواپ شبانه هم از همان پروفایل می‌آید (۱٫۵٫۰۳)
-        profile.symbol(spec.id)?.let { bs ->
-            val sl = bs.swapLong ?: 0.0
-            val ss = bs.swapShort ?: 0.0
-            if (sl != 0.0 || ss != 0.0) {
-                s.swapEnabled = true
-                s.swapLong = sl
-                s.swapShort = ss
-            }
-        }
+        applySwap(s, spec, profile)
 
         // ── نرمال‌کردن ضریب فیلتر کارمزد تا آستانهٔ **مطلق** تغییر نکند ─────────────
         //  چرا لازم است: اندازه‌گیری روی نفت ۲۰۲۲–۲۰۲۶ نشان داد اگر فقط کارمزد کم شود و
@@ -226,5 +266,190 @@ object Symbols {
             if (floor > 0.0) s.minSlCostMult = Math.round(floor / cost * 10.0) / 10.0
         }
         return cost
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  پروفایل عددی پوند/دلار (GBPUSD) — نسخهٔ ۱٫۵٫۰۴
+    //
+    //  خواستهٔ مالک: GBPUSD باید کپی بی‌کم‌وکاست طلا و همهٔ تنظیم‌هایش باشد. پس اینجا
+    //  [Tuned] طلا **عیناً** صدا زده می‌شود و هیچ کلید دیگری دست نمی‌خورد؛ تنها عددهایی
+    //  بازمقیاس می‌شوند که واحدشان «واحد قیمت» یا «درصد نوسان» است و با کپی عددی روی
+    //  قیمت ۱٫۳ دلاری بی‌معنا می‌شدند (بافر ۱۸ دلاری روی پوند می‌شد ۱٬۳۰۰٪ قیمت).
+    //
+    //  قاعدهٔ بازمقیاس‌کردن: «همان ضریب ATR روی همان داده».
+    //  اندازه‌گیری با همان تعریف موتور (`Engine.structureAtr` = میانگین TR روی ۱۴ کندل
+    //  بستهٔ H1 · `tools/measure_fx_atr.py` · جدول `docs/fx_atr_calibration.json`):
+    //
+    //      بازه    میانهٔ ATR٪ طلا   میانهٔ ATR٪ پوند   نسبت
+    //      ۱ سال        ۰٫۴۰۸۴            ۰٫۱۱۰۹        ۰٫۲۷۱۵
+    //      ۳ سال        ۰٫۲۸۶۵            ۰٫۱۱۴۸        ۰٫۴۰۰۷
+    //      ۲۰ سال       ۰٫۲۵۷۸            ۰٫۱۳۸۷        ۰٫۵۳۸۲
+    //
+    //  ⚠ مبنای محاسبه **۱ سال** است، نه ۲۰ سال. دلیلش اندازه‌گیری مستقیم است، نه سلیقه:
+    //  نوسان طلا در یک سال گذشته ۵۸٪ **بزرگ** شده (۰٫۲۵۷۸ → ۰٫۴۰۸۴) و نوسان پوند ۲۰٪
+    //  **کوچک** (۰٫۱۳۸۷ → ۰٫۱۱۰۹). اعداد [Tuned] طلا ثابتِ مطلق‌اند، پس «ضریب ATR»ِ خودِ
+    //  طلا هم در این بیست سال جابه‌جا شده: بافر ۱۸ دلاری روی دادهٔ یک‌ساله فقط ۱٫۰۲×ATR
+    //  است، نه ۵٫۱۹×ATRِ میانگین بیست‌ساله. بک‌تست تأیید کرد همین ۱٫۰۲ ضریبِ مؤثر است
+    //  (حد ضرر واقعیِ معاملات طلا روی یک سال = ۱٫۳۱×ATR که ۱٫۰۲ آن بافر است).
+    //  اگر پوند با مبنای ۲۰ سال بسته می‌شد، بافرش ۶٫۷×ATR می‌شد؛ آنگاه حد ضرر هرگز
+    //  نمی‌خورد (۰ خروج با SL در کل سال)، حد سود ۴۸×ATR هرگز نمی‌رسید و تب عملاً مرده
+    //  بود: ۸ معامله در سال به‌جای ۱۳۴. پس هر عدد زیر، ضریب ATRِ **دادهٔ یک‌سالهٔ** طلا
+    //  را نگه می‌دارد:
+    //
+    //      مقدار            طلا (۱ سال)        ضریب ATR طلا   پوند
+    //      بافر حد ضرر      ۱۸٫۰۰ دلار          ۱٫۰۲×        ۰٫۰۰۱۵ (۱۵۰ تیک / ۱٫۰۲×ATR)
+    //      سقف N            ۸۰ دلار             ۴٫۵۲×        ۰٫۰۰۶۷ (۴٫۵۲×ATR)
+    //      حد سود جایگزین   ۱۰ دلار             ۰٫۵۷×        ۰٫۰۰۰۸۴
+    //
+    //  و چون بافر و سقف N **نسبی به ATR** بسته شده‌اند (`slBufMode=1` و `maxSlMode=1` —
+    //  همان مکانیزمی که [Optimizer] جارویش می‌کند)، این ضریب‌ها روی هر پنج بازهٔ داده
+    //  درست می‌مانند و با تغییر نوسان پوند کهنه نمی‌شوند. ثابت‌های تیکی فقط جانشینِ
+    //  دورانِ «ATR هنوز گرم نشده» هستند.
+    //
+    //  هر آستانهٔ درصدی هم با همان نسبت ۰٫۲۷۱۵ مقیاس شده تا **صدکِ** خودش در توزیع
+    //  ATR٪ِ یک‌ساله حفظ شود:
+    //      گیت نوسان     ۰٫۲۵ (زیر صدک ۱۰ طلا)  →  ۰٫۰۶۸ (زیر صدک ۱۰ پوند)
+    //      دروازهٔ مدیریت ۰٫۳۰                  →  ۰٫۰۸۱
+    //      دروازهٔ ترکیبی ۰٫۳۳                  →  ۰٫۰۹۰
+    //      آرامِ ترکیبی   ۰٫۴۰                  →  ۰٫۱۰۹
+    //
+    //  چیزهایی که **عمداً** کپی عددی شده‌اند: بافر سطح سفارش ‎−۲ تیک‎ و لغزش ۱ تیک.
+    //  هر دو زیر یک‌درصد ATR هستند (در طلا و پوند) و واحدشان «تیکِ خودِ نماد» است،
+    //  پس معنایشان با عوض‌شدن اندازهٔ تیک خودش حفظ می‌شود.
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** یک تیک پوند = یک «پوینت» در قرارداد رسمی آلپاری. */
+    const val FX_MINTICK = 0.00001
+
+    /** بافر حد ضرر پوند به تیک ⇒ ۰٫۰۰۱۵ (۱۵ پیپ). فقط تا گرم‌شدن ATR کاربرد دارد. */
+    const val FX_SL_BUF_TICKS = 150.0
+
+    /** ضریب ATRِ بافر حد ضرر — دقیقاً همان ضریبی که ۱۸ دلار طلا روی دادهٔ یک‌ساله دارد. */
+    const val FX_SL_ATR_MULT = 1.02
+
+    /** سقف N پوند (واحد قیمت) ⇒ ۶۷ پیپ؛ جانشینِ ثابت تا گرم‌شدن ATR. */
+    const val FX_MAX_SL_UNITS = 0.0067
+
+    /** ضریب ATRِ سقف N — همان ضریب طلای ۸۰ دلاری روی دادهٔ یک‌ساله. */
+    const val FX_MAX_SL_ATR_MULT = 4.52
+
+    /** حد سود استراتژی ۲ و کف حد سود فیبویی (واحد قیمت) ≈ ۰٫۵۷× ATR. */
+    const val FX_TP_UNITS = 0.00084
+
+    /** گیت نوسان ورود (ATR/قیمت×۱۰۰) — هم‌صدک با ۰٫۲۵٪ طلا. */
+    const val FX_MIN_ATR_PCT = 0.068
+
+    /** دروازهٔ نوسان مدیریت هوشمند — هم‌صدک با ۰٫۳۰٪ طلا. */
+    const val FX_MGMT_VOL_GATE_PCT = 0.081
+
+    /** دروازه‌های رژیم لایهٔ ترکیبی — هم‌صدک با ۰٫۳۳٪ و ۰٫۴۰٪ طلا. */
+    const val FX_CX_REGIME_GATE = 0.090
+    const val FX_CX_REGIME_GATE_CALM = 0.109
+
+    /**
+     * کارمزد مرجع پوند: هزینهٔ رفت‌وبرگشت آلپاری Pro ECN MT5 بر حسب دلار به‌ازای هر
+     * **پوند** (= ۷ دلار در لات ۱۰۰٬۰۰۰ پوندی: اسپرد ۲ پوینت + ۲٫۵ دلار کمیسیون هر طرف).
+     * فقط وقتی استفاده می‌شود که پروفایل انتخابی عدد رسمی منتشرنکرده داشته باشد.
+     */
+    const val DEFAULT_FX_CMSN = 0.00007
+
+    /**
+     * پیش‌فرض پوند = **کپی کامل [Tuned] طلا** + عددهای بازمقیاس‌شدهٔ بالا.
+     *
+     * هیچ استراتژی، مود مدیریت، لایهٔ ترکیبی، پنجرهٔ ساعتی یا تنظیم ریسکی اینجا
+     * عوض نمی‌شود؛ اگر روزی [Tuned] طلا تغییر کند، پوند هم همان را می‌گیرد.
+     */
+    fun applyFxDDefaults(s: Settings, cmsn: Double = DEFAULT_FX_CMSN) {
+        Tuned.apply(s, cmsn)                    // ← عیناً همان تنظیم آزموده‌شدهٔ طلا
+        // ── فقط عددهای وابسته به مقیاس قیمت ────────────────────────────────────
+        s.mintick = FX_MINTICK
+        // بافر و سقف N **نسبی به ATR**: ضریبِ ثابتِ طلا روی دادهٔ یک‌ساله، ولی خودش با
+        // نوسانِ لحظه‌ای پوند بزرگ و کوچک می‌شود. ثابت‌های تیکی فقط جانشینِ گرم‌نشدن ATR.
+        s.slBufMode = 1
+        s.slAtrMult = FX_SL_ATR_MULT
+        s.slBufTicks = FX_SL_BUF_TICKS
+        s.maxSlMode = 1
+        s.maxSlAtrMult = FX_MAX_SL_ATR_MULT
+        s.maxSlUnits = FX_MAX_SL_UNITS
+        s.tpUnits = FX_TP_UNITS
+        s.minTPunits = FX_TP_UNITS
+        s.minAtrPct = FX_MIN_ATR_PCT
+        s.mgmtVolGatePct = FX_MGMT_VOL_GATE_PCT
+        s.cxRegimeGate = FX_CX_REGIME_GATE
+        s.cxRegimeGateCalm = FX_CX_REGIME_GATE_CALM
+        s.cmsnAuto = false
+        s.cmsnManual = cmsn
+    }
+
+    /**
+     * سواپ شبانهٔ رسمی پروفایل بروکر → [Settings].
+     * اگر پروفایل برای این نماد سواپی منتشر نکرده باشد، تنظیم کاربر دست‌نخورده می‌ماند.
+     */
+    private fun applySwap(s: Settings, spec: SymbolSpec, profile: BrokerProfile) {
+        profile.symbol(spec.id)?.let { bs ->
+            val sl = bs.swapLong ?: 0.0
+            val ss = bs.swapShort ?: 0.0
+            if (sl != 0.0 || ss != 0.0) {
+                s.swapEnabled = true
+                s.swapLong = sl
+                s.swapShort = ss
+            }
+        }
+    }
+
+    /** پیش‌فرض‌های یک نماد بر اساس نوعش. */
+    fun applyKindDefaults(s: Settings, spec: SymbolSpec, cost: Double) = when (spec.kind) {
+        SymbolKind.OIL -> applyOilDefaults(s, cost)
+        SymbolKind.FX -> applyFxDDefaults(s, cost)
+        SymbolKind.METAL -> applyGoldDefaults(s, cost)
+    }
+
+    /**
+     * کارمزد جانشین هر نماد وقتی پروفایل بروکر عدد رسمی ندارد.
+     * (طلا/نفت همان اعداد ۱٫۵٫۰۲ · پوند هزینهٔ Pro ECN MT5.)
+     */
+    fun fallbackCost(spec: SymbolSpec): Double = when (spec.kind) {
+        SymbolKind.OIL -> DEFAULT_OIL_CMSN
+        SymbolKind.FX -> DEFAULT_FX_CMSN
+        SymbolKind.METAL -> Tuned.CMSN
+    }
+
+    /**
+     * ضریب‌های بازمقیاس‌کردن مقادیر **دستی کاربر/پیش‌تنظیم** از طلا به یک نماد دیگر.
+     *
+     *   [unit]  ضربدرِ مقدارهای «واحد قیمت» (tpUnits · minSl · maxSl · حد فاصله‌ها)
+     *   [ticks] ضربدرِ مقدارهای تیکی، تا همان فاصلهٔ مطلقِ معادل به‌دست آید
+     *   [pct]   ضربدرِ آستانه‌های «ATR/قیمت×۱۰۰» تا همان **صدک** از توزیع نوسان بماند
+     *   [money] ضربدرِ مقدارهای پولیِ هم‌واحد قیمت (کارمزد/اسپرد دستی)
+     *
+     * ⚠ نفت عمداً ضریب ۱ دارد: پروفایل نفت از اول مستقل از طلا جارو و تنظیم شده
+     * ([applyOilDefaults]) و جدول تطبیق هم برای نفت همان‌طور که در ۱٫۵٫۰۲ آزموده شد
+     * می‌ماند؛ اینجا فقط نماد تازه (پوند) مقیاس می‌گیرد تا رفتار هیچ نماد موجودی عوض نشود.
+     */
+    data class Scale(val unit: Double, val ticks: Double, val pct: Double, val money: Double) {
+        val isIdentity: Boolean get() = unit == 1.0 && ticks == 1.0 && pct == 1.0 && money == 1.0
+    }
+
+    val SCALE_NONE = Scale(1.0, 1.0, 1.0, 1.0)
+
+    /**
+     * پوند — از اندازه‌گیری ATR٪ **یک‌ساله** (همان مبنای ثابت‌های بالا):
+     * نسبت میانهٔ ATR٪ ۰٫۱۱۰۹ ÷ ۰٫۴۰۸۴ = ۰٫۲۷۱۵ و نسبت ATR مطلق
+     * ۰٫۰۰۱۴۸۸۹ ÷ ۱۷٫۶۹۷۵ = ۰٫۰۰۰۰۸۴۱.
+     *
+     * [ticks] = ۱۵۰ ÷ ۱۸۰۰ است تا بافر پیش‌تنظیم ستاره‌دارِ طلا دقیقاً همان
+     * [FX_SL_BUF_TICKS] شود. [money] نسبت کارمزد مرجع دو نماد است (۰٫۰۰۰۰۷ ÷ ۰٫۷).
+     */
+    val SCALE_FX = Scale(unit = 0.0000841, ticks = 0.0833, pct = 0.2715, money = 0.0001)
+
+    fun scale(spec: SymbolSpec): Scale = when (spec.kind) {
+        SymbolKind.FX -> SCALE_FX
+        else -> SCALE_NONE
+    }
+
+    /** گرد کردن یک عدد بازمقیاس‌شده به رقم اعشار نماد (بدون آن، ۰٫۰۰۰۵۶۱۸۴ می‌شود). */
+    fun roundUnits(spec: SymbolSpec, v: Double): Double {
+        val f = Math.pow(10.0, (spec.decimals + 1).toDouble())
+        return Math.round(v * f) / f
     }
 }

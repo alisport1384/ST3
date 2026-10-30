@@ -45,7 +45,16 @@ data class BrokerSymbol(
     val contractSize: Double,
     val commissionPerMillionPerSide: Double,
     val swapLong: Double?,
-    val swapShort: Double?
+    val swapShort: Double?,
+    /**
+     * کمیسیون **ثابت هر لات** در هر طرف (دلار) — `null` یعنی همان مدل «دلار بر میلیون».
+     *
+     * چرا لازم است: آلپاری کمیسیون فلزات و کالاها را «دلار بر میلیون ارزش اسمی» اعلام
+     * می‌کند، ولی کمیسیون جفت‌ارزها را **مستقیم بر لات** (۲٫۵ دلار در لات، هر طرف).
+     * اگر همان فرمول میلیون روی پوند ۱٫۳ دلاری اعمال می‌شد، عدد به قیمت وابسته می‌شد؛
+     * اینجا صورت و مخرج قرارداد واقعاً حذف می‌شوند: `۲ × ۲٫۵ ÷ ۱۰۰٬۰۰۰ = ۰٫۰۰۰۰۵`.
+     */
+    val commissionPerLotPerSide: Double? = null
 ) {
     /** اسپرد بر حسب واحد قیمت (دلار بر اونس/بشکه) — `null` اگر بروکر عددی منتشر نکرده باشد. */
     val spreadPerUnit: Double? get() = spreadPoints?.let { it * pointSize }
@@ -58,7 +67,8 @@ data class BrokerSymbol(
      * پس مستقل از اندازهٔ قرارداد است و فقط با قیمت بالا/پایین می‌رود.
      */
     fun commissionPerUnit(price: Double): Double =
-        2.0 * price * commissionPerMillionPerSide / 1_000_000.0
+        commissionPerLotPerSide?.let { 2.0 * it / contractSize }
+            ?: (2.0 * price * commissionPerMillionPerSide / 1_000_000.0)
 
     /** کل هزینهٔ رفت‌وبرگشت بر حسب واحد قیمت — همان واحد `cmsnManual` در [Settings]. */
     fun costPerUnit(price: Double): Double? =
@@ -111,6 +121,36 @@ object Brokers {
     private const val OIL_SWAP_LONG = +0.03432
     private const val OIL_SWAP_SHORT = -0.07580
 
+    // ── پوند/دلار (GBPUSD) — همان ویجت رسمی Contract Specifications، ردیف forexMajors ──
+    //  contractSize ۱۰۰٬۰۰۰ پوند · minimumSpread ۲ پوینت (پوینت = ۰٫۰۰۰۰۱) ·
+    //  swapType «By points»: −۳٫۲۹ و −۱٫۴۴ پوینت ⇒ × ۰٫۰۰۰۰۱ = دلار بر **پوند** در شب.
+    //  کمیسیون جفت‌ارزها «۲٫۵ دلار در لات، هر طرف» است و فقط روی حساب Pro ECN گرفته
+    //  می‌شود (صفحهٔ رسمی خودِ آلپاری: «آلپاری فقط روی حساب Pro ECN کمیسیون می‌گیرد»).
+    private const val FX_CONTRACT = 100000.0
+    private const val FX_POINT = 0.00001
+    private const val FX_COMM_PER_LOT = 2.5
+    private const val GBP_SWAP_LONG = -0.0000329
+    private const val GBP_SWAP_SHORT = -0.0000144
+
+    /**
+     * @param spreadPoints حداقل اسپرد رسمی بر حسب **پوینت**؛ `null` = آلپاری برای آن
+     *        نوع حساب عددی منتشر نکرده (فقط `proEcnMt5` سمت سرور رندر می‌شود).
+     *        ⚠ عمداً اسپرد حدس نمی‌زنیم: هزینهٔ اشتباه، کل فیلتر کارمزد را جابه‌جا می‌کند.
+     */
+    private fun fx(
+        ticker: String,
+        spreadPoints: Double?,
+        commPerLotPerSide: Double,
+        knownSwap: Boolean = false
+    ) = BrokerSymbol(
+        symbolId = Symbols.GBPUSD.id, ticker = ticker,
+        spreadPoints = spreadPoints, pointSize = FX_POINT, contractSize = FX_CONTRACT,
+        commissionPerMillionPerSide = 0.0,
+        swapLong = if (knownSwap) GBP_SWAP_LONG else null,
+        swapShort = if (knownSwap) GBP_SWAP_SHORT else null,
+        commissionPerLotPerSide = commPerLotPerSide
+    )
+
     private fun gold(
         ticker: String,
         spreadPoints: Double?,
@@ -141,7 +181,8 @@ object Brokers {
             "دلار ارزش اسمی (هر طرف). حداقل واریز ۵۰۰ دلار. ارزان‌ترین حالت برای هر دو نماد.",
         symbols = mapOf(
             Symbols.GOLD.id to gold("XAUUSD", 9.08, GOLD_COMM),
-            Symbols.OIL.id to oil("WTI", 1.0, OIL_COMM)
+            Symbols.OIL.id to oil("WTI", 1.0, OIL_COMM),
+            Symbols.GBPUSD.id to fx("GBPUSD", 2.0, FX_COMM_PER_LOT, knownSwap = true)
         )
     )
 
@@ -153,7 +194,8 @@ object Brokers {
             "تا وقتی خودتان در MT5/ترمینال چک نکرده‌اید از این پروفایل برای نفت استفاده نکنید.",
         symbols = mapOf(
             Symbols.GOLD.id to gold("XAUUSD", 9.08, GOLD_COMM),
-            Symbols.OIL.id to oil("WTI", null, OIL_COMM)
+            Symbols.OIL.id to oil("WTI", null, OIL_COMM),
+            Symbols.GBPUSD.id to fx("GBPUSD", null, FX_COMM_PER_LOT)
         )
     )
 
@@ -164,7 +206,8 @@ object Brokers {
         noteFa = "بدون کمیسیون؛ همهٔ هزینه داخل اسپرد. حداقل واریز ۳۰۰ دلار.",
         symbols = mapOf(
             Symbols.GOLD.id to gold("XAUUSD", 31.9, 0.0),
-            Symbols.OIL.id to oil("WTI", 3.0, 0.0)
+            Symbols.OIL.id to oil("WTI", 3.0, 0.0),
+            Symbols.GBPUSD.id to fx("GBPUSD", null, 0.0)
         )
     )
 
@@ -175,7 +218,8 @@ object Brokers {
         noteFa = "بدون کمیسیون، اسپرد پهن‌تر (حساب رایج خرده‌فروشی). حداقل واریز ۱۰۰ دلار.",
         symbols = mapOf(
             Symbols.GOLD.id to gold("XAUUSD", 35.9, 0.0),
-            Symbols.OIL.id to oil("WTI", 6.0, 0.0)
+            Symbols.OIL.id to oil("WTI", 6.0, 0.0),
+            Symbols.GBPUSD.id to fx("GBPUSD", null, 0.0)
         )
     )
 
@@ -186,7 +230,8 @@ object Brokers {
         noteFa = "بدون کمیسیون؛ اسپرد نفت یک پوینت از Standard MT5 پهن‌تر است.",
         symbols = mapOf(
             Symbols.GOLD.id to gold("XAUUSD", 35.9, 0.0),
-            Symbols.OIL.id to oil("WTI", 7.0, 0.0)
+            Symbols.OIL.id to oil("WTI", 7.0, 0.0),
+            Symbols.GBPUSD.id to fx("GBPUSD", null, 0.0)
         )
     )
 
@@ -211,8 +256,23 @@ object Brokers {
      * فقط برای ساختن عدد کارمزد در لحظهٔ «ست کردن بروکر» استفاده می‌شود؛ خودِ ذخیره
      * قیمتِ واقعیِ همان لحظه را نگه می‌دارد ([Settings.brokerRefPrice]).
      */
-    fun fallbackPrice(symbolId: String): Double =
-        if (Symbols.byId(symbolId).oil) 100.0 else 4000.0
+    fun fallbackPrice(symbolId: String): Double = when (Symbols.byId(symbolId).kind) {
+        SymbolKind.OIL -> 100.0
+        SymbolKind.FX -> 1.35
+        SymbolKind.METAL -> 4000.0
+    }
+
+    /**
+     * رقم اعشار نمایش هزینه برای هر نماد. پوند با چهار رقم «۰٫۰۰۰۱» می‌شد، یعنی
+     * کل هزینهٔ ۰٫۰۰۰۰۷ دلاری‌اش «۰٫۰۰۰۱» نشان داده می‌شد — بی‌معنا. طلا و نفت همان
+     * چهار رقم قدیمی را نگه می‌دارند تا هیچ متن آزموده‌شده‌ای عوض نشود.
+     */
+    fun costDecimals(symbolId: String): Int =
+        if (Symbols.byId(symbolId).kind == SymbolKind.FX) 5 else 4
+
+    /** رقم اعشار نمایش سواپ — مقادیر پوند هشت رقم لازم دارند. */
+    fun swapDecimals(symbolId: String): Int =
+        if (Symbols.byId(symbolId).kind == SymbolKind.FX) 8 else 4
 
     /** کارمزد رفت‌وبرگشت بر حسب واحد قیمت (واحد `cmsnManual`)؛ `null` اگر عدد رسمی نبود. */
     fun costPerUnit(profile: BrokerProfile?, symbolId: String, price: Double): Double? {
@@ -229,11 +289,13 @@ object Brokers {
         val cm = s.commissionPerUnit(px)
         val tot = s.costPerUnit(px)
         val unit = Symbols.byId(symbolId).unit
+        val d = costDecimals(symbolId)
+        val pd = Symbols.byId(symbolId).decimals
         if (tot == null) {
-            return "${s.ticker}: اسپرد رسمی منتشر نشده (کمیسیون ${Fa2.n(cm, 4)} دلار بر $unit)"
+            return "${s.ticker}: اسپرد رسمی منتشر نشده (کمیسیون ${Fa2.n(cm, d)} دلار بر $unit)"
         }
-        return "${s.ticker} @ ${Fa2.n(px, 2)}: اسپرد ${Fa2.n(sp ?: 0.0, 4)} + کمیسیون " +
-            "${Fa2.n(cm, 4)} = **${Fa2.n(tot, 4)} دلار بر $unit** رفت‌وبرگشت " +
+        return "${s.ticker} @ ${Fa2.n(px, pd)}: اسپرد ${Fa2.n(sp ?: 0.0, d)} + کمیسیون " +
+            "${Fa2.n(cm, d)} = **${Fa2.n(tot, d)} دلار بر $unit** رفت‌وبرگشت " +
             "(${Fa2.n(tot * s.contractSize, 2)} دلار در لات · ${Fa2.n(tot / px * 100.0, 4)}٪ قیمت)"
     }
 
@@ -247,7 +309,8 @@ object Brokers {
         val unit = Symbols.byId(symbolId).unit
         val l = s.swapLong ?: return ""
         val sh = s.swapShort ?: return ""
-        return "سواپ شبانه: خرید ${Fa2.n(l, 4)} · فروش ${Fa2.n(sh, 4)} دلار بر $unit در هر شب " +
+        val d = swapDecimals(symbolId)
+        return "سواپ شبانه: خرید ${Fa2.n(l, d)} · فروش ${Fa2.n(sh, d)} دلار بر $unit در هر شب " +
             "(سه‌برابر در چهارشنبه · شب شنبه و یکشنبه نداریم چون بازار بسته است) — در بک‌تست، " +
             "در «سود/زیان خالص» و افت سرمایه حساب می‌شود."
     }

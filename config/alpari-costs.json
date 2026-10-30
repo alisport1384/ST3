@@ -4,12 +4,13 @@
   "fetched_utc": "2026-10-28",
   "price_ref": {
     "XAUUSD": 4061.0,
-    "WTI": 101.2
+    "WTI": 101.2,
+    "GBPUSD": 1.36429
   },
-  "note_point": "1 point XAUUSD = 0.01 USD/oz. 1 point WTI/BRN = 0.01 USD/bbl (contract size 1000 bbl).",
+  "note_point": "1 point XAUUSD = 0.01 USD/oz. 1 point WTI/BRN = 0.01 USD/bbl (contract size 1000 bbl). 1 point GBPUSD = 0.00001 (contract size 100,000 GBP); 1 pip = 10 points.",
   "accounts": {
     "proEcnMt5": {
-      "commission": "18 USD per 1,000,000 USD notional on spot metals (per side); 25 USD per 1,000,000 USD notional on commodity CFDs (per side)",
+      "commission": "18 USD per 1,000,000 USD notional on spot metals (per side); 25 USD per 1,000,000 USD notional on commodity CFDs (per side); 2.50 USD per lot on forex majors (per side)",
       "gold": {
         "ticker": "XAUUSD",
         "min_spread_points": 9.08,
@@ -42,6 +43,22 @@
         "swap_long": 37.05,
         "swap_short": -113.25,
         "swap_type": "By symbol currency"
+      },
+      "gbpusd": {
+        "ticker": "GBPUSD",
+        "min_spread_points": 2.0,
+        "contract_size": 100000,
+        "commission_flag": true,
+        "commission_usd_per_lot_per_side": 2.5,
+        "min_spread_usd_per_unit": 2e-05,
+        "min_spread_usd_per_lot": 2.0,
+        "swap_long": -3.29,
+        "swap_short": -1.44,
+        "swap_type": "By points",
+        "swap_long_usd_per_unit": -3.29e-05,
+        "swap_short_usd_per_unit": -1.44e-05,
+        "min_volume_lots": 0.01,
+        "market_hours_utc": "Mon-Fri 00:15-23:55"
       }
     },
     "proEcnMt4": {
@@ -78,6 +95,22 @@
         "swap_long": 37.05,
         "swap_short": -113.25,
         "swap_type": "By dollars"
+      },
+      "gbpusd": {
+        "ticker": "GBPUSD",
+        "min_spread_points": null,
+        "contract_size": 100000,
+        "commission_flag": true,
+        "commission_usd_per_lot_per_side": 2.5,
+        "min_spread_usd_per_unit": null,
+        "min_spread_usd_per_lot": null,
+        "swap_long": null,
+        "swap_short": null,
+        "swap_type": null,
+        "swap_long_usd_per_unit": null,
+        "swap_short_usd_per_unit": null,
+        "min_volume_lots": null,
+        "market_hours_utc": null
       }
     },
     "ecnMt4": {
@@ -114,6 +147,22 @@
         "swap_long": 37.05,
         "swap_short": -113.25,
         "swap_type": "By dollars"
+      },
+      "gbpusd": {
+        "ticker": "GBPUSD",
+        "min_spread_points": null,
+        "contract_size": 100000,
+        "commission_flag": false,
+        "commission_usd_per_lot_per_side": 0.0,
+        "min_spread_usd_per_unit": null,
+        "min_spread_usd_per_lot": null,
+        "swap_long": null,
+        "swap_short": null,
+        "swap_type": null,
+        "swap_long_usd_per_unit": null,
+        "swap_short_usd_per_unit": null,
+        "min_volume_lots": null,
+        "market_hours_utc": null
       }
     },
     "standardMt4": {
@@ -150,6 +199,22 @@
         "swap_long": 37.05,
         "swap_short": -113.25,
         "swap_type": "By dollars"
+      },
+      "gbpusd": {
+        "ticker": "GBPUSD",
+        "min_spread_points": null,
+        "contract_size": 100000,
+        "commission_flag": false,
+        "commission_usd_per_lot_per_side": 0.0,
+        "min_spread_usd_per_unit": null,
+        "min_spread_usd_per_lot": null,
+        "swap_long": null,
+        "swap_short": null,
+        "swap_type": null,
+        "swap_long_usd_per_unit": null,
+        "swap_short_usd_per_unit": null,
+        "min_volume_lots": null,
+        "market_hours_utc": null
       }
     },
     "standardMt5": {
@@ -186,6 +251,22 @@
         "swap_long": 37.05,
         "swap_short": -113.25,
         "swap_type": "By symbol currency"
+      },
+      "gbpusd": {
+        "ticker": "GBPUSD",
+        "min_spread_points": null,
+        "contract_size": 100000,
+        "commission_flag": false,
+        "commission_usd_per_lot_per_side": 0.0,
+        "min_spread_usd_per_unit": null,
+        "min_spread_usd_per_lot": null,
+        "swap_long": null,
+        "swap_short": null,
+        "swap_type": null,
+        "swap_long_usd_per_unit": null,
+        "swap_short_usd_per_unit": null,
+        "min_volume_lots": null,
+        "market_hours_utc": null
       }
     },
     "microMt4": {
@@ -222,6 +303,22 @@
         "swap_long": 0.3705,
         "swap_short": -1.1325,
         "swap_type": "By dollars"
+      },
+      "gbpusd": {
+        "ticker": "GBPUSD",
+        "min_spread_points": null,
+        "contract_size": 100000,
+        "commission_flag": false,
+        "commission_usd_per_lot_per_side": 0.0,
+        "min_spread_usd_per_unit": null,
+        "min_spread_usd_per_lot": null,
+        "swap_long": null,
+        "swap_short": null,
+        "swap_type": null,
+        "swap_long_usd_per_unit": null,
+        "swap_short_usd_per_unit": null,
+        "min_volume_lots": null,
+        "market_hours_utc": null
       }
     }
   },
@@ -234,6 +331,10 @@
       "wti_allin_usd_per_bbl_pct": [
         0.01506,
         0.0149
+      ],
+      "gbpusd_allin_usd_per_unit_pct": [
+        7e-05,
+        0.0051
       ]
     },
     "proEcnMt4": {
@@ -241,7 +342,8 @@
         0.237,
         0.0058
       ],
-      "wti_allin_usd_per_bbl_pct": null
+      "wti_allin_usd_per_bbl_pct": null,
+      "gbpusd_allin_usd_per_unit_pct": null
     },
     "ecnMt4": {
       "gold_allin_usd_per_oz_pct": [
@@ -251,7 +353,8 @@
       "wti_allin_usd_per_bbl_pct": [
         0.03,
         0.0296
-      ]
+      ],
+      "gbpusd_allin_usd_per_unit_pct": null
     },
     "standardMt4": {
       "gold_allin_usd_per_oz_pct": [
@@ -261,7 +364,8 @@
       "wti_allin_usd_per_bbl_pct": [
         0.07,
         0.0692
-      ]
+      ],
+      "gbpusd_allin_usd_per_unit_pct": null
     },
     "standardMt5": {
       "gold_allin_usd_per_oz_pct": [
@@ -271,7 +375,9 @@
       "wti_allin_usd_per_bbl_pct": [
         0.06,
         0.0593
-      ]
+      ],
+      "gbpusd_allin_usd_per_unit_pct": null
     }
-  }
+  },
+  "note_gbpusd": "Only the proEcnMt5 row is server-rendered by Alpari's own widget; the other account types publish no official minimum spread for GBPUSD, so min_spread_points stays null instead of being guessed. A wrong cost would shift the whole commission filter."
 }

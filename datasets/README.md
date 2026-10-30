@@ -1,4 +1,4 @@
-# دیتاست‌های بک‌تست طلا — XAUUSD، کندل M1
+# دیتاست‌های بک‌تست — طلا (XAUUSD) و پوند/دلار (GBPUSD)، کندل M1
 
 داده‌ها **نه داخل APK و نه داخل مخزن** نگهداری می‌شوند؛ هر پنج برش به‌صورت asset در بخش
 [**Releases**](https://github.com/alisport1384/ST2/releases/tag/data-v1) با تگ `data-v1` منتشر شده‌اند و اپ هر بازه را پس از انتخاب کاربر جداگانه از همان‌جا دانلود می‌کند. مزیت: کلون مخزن چند مگابایت
@@ -57,6 +57,63 @@ curl -fLO $BASE/goldpin_xauusd_m1_20y.csv.gz
 | ۱۰ سال | [data-v1/10y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_10y.csv.gz) |
 | ۲۰ سال | [data-v1/20y](https://github.com/alisport1384/ST2/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) | [ST1](https://github.com/alisport1384/ST1/releases/download/data-v1/goldpin_xauusd_m1_20y.csv.gz) |
 
+## دیتاست‌های پوند/دلار — GBPUSD، کندل M1 (تگ `data-fx-v1`)
+
+هر پنج برش در Release با تگ [`data-fx-v1`](https://github.com/alisport1384/ST3/releases/tag/data-fx-v1) منتشر می‌شوند، نه در مخزن یا APK. اپ هر بازه را جداگانه دریافت می‌کند و
+SHA-256 پیش از تأیید بررسی می‌شود. آزمون `RepositoryFxDatasetTest` همین SHAها را قفل می‌کند.
+
+| بازه | فایل | کندل | اندازهٔ فشرده | شروع UTC | پایان UTC | SHA-256 |
+|---|---|---:|---:|---|---|---|
+| ۱ سال | [`goldpin_gbpusd_m1_1y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-fx-v1/goldpin_gbpusd_m1_1y.csv.gz) | 369,390 | 4,044,650 بایت | 2025-08-21 00:00 | 2026-08-20 23:59 | `c66b3d01614f42508978c6061a9a29a6a452ff25f5aa868489075d94f28a3abd` |
+| ۲ سال | [`goldpin_gbpusd_m1_2y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-fx-v1/goldpin_gbpusd_m1_2y.csv.gz) | 738,328 | 8,148,903 بایت | 2024-08-21 00:00 | 2026-08-20 23:59 | `547d84e1faf31bc5930460ac8c07f52f4b5c065b7e6107fc1ffe12dd7189b56e` |
+| ۳ سال | [`goldpin_gbpusd_m1_3y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-fx-v1/goldpin_gbpusd_m1_3y.csv.gz) | 1,107,619 | 12,014,871 بایت | 2023-08-21 00:00 | 2026-08-20 23:59 | `d227be7d372e44fd1133b22fd9818cc8dcfae25f6f33e976aa615db2a9b89e31` |
+| ۱۰ سال | [`goldpin_gbpusd_m1_10y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-fx-v1/goldpin_gbpusd_m1_10y.csv.gz) | 3,580,052 | 38,247,889 بایت (حدود 36.5 MiB) | 2016-08-21 22:00 | 2026-08-20 23:59 | `081bb7af6e8dfe966ef4c17d03f9ddba4788d02914aa3e6daf698193b24394fe` |
+| ۲۰ سال | [`goldpin_gbpusd_m1_20y.csv.gz`](https://github.com/alisport1384/ST3/releases/download/data-fx-v1/goldpin_gbpusd_m1_20y.csv.gz) | 7,101,926 | 74,396,016 بایت (حدود 70.9 MiB) | 2006-08-21 00:00 | 2026-08-20 23:59 | `fc1ccef3b080e00ea049624684d20cc5cbfb35d3f53942ce42a2fa52487aec2e` |
+
+**منبع:** مجموعهٔ عمومی [`bunqi/OANDA_GBPUSD_GBPUSD`](https://huggingface.co/datasets/bunqi/OANDA_GBPUSD_GBPUSD)
+روی Hugging Face — کندل یک‌دقیقه‌ای OANDA از ۲۰۰۲-۰۵ تا امروز، ۲۹۴ فایل ماهانهٔ Parquet بدون شکاف.
+
+**حجم:** ستون `volume` = **تعداد تیک در دقیقه** (tick volume)، عدد صحیح. در هیچ‌کدام از پنج برش
+کندل بی‌حجم وجود ندارد (`zeroVolumeBars = 0` در همهٔ `.meta.json`). این همان خانوادهٔ واحدی است
+که دیتاست‌های منتشرشدهٔ طلا دارند (میانهٔ حجم طلای یک‌ساله ۱۴۹، پوند ۱۲۲)، پس **بدون هیچ ضریبی**
+مستقیم مصرف می‌شود — استراتژی‌های باکس ولوم کم/زیاد بدون حجم کار نمی‌کنند و این پیش‌شرط اصلی بود.
+
+**لنگر زمانی:** بازه‌ها با **تفریق سال تقویمی** از یک لنگر مشترک ساخته شده‌اند، دقیقاً مثل طلا:
+آخرین کندل هر پنج فایل `2026-08-20T23:59Z` است. کندل‌های آخرهفتهٔ بسته حذف شده‌اند
+(`droppedWeekend` در `.meta.json`) و OHLC نامعتبر و timestamp تکراری صفر است.
+
+**منابع ردشده (مستند، تا دوباره امتحان نشوند):**
+- `HISTDATA.COM` — فایل‌های M1 در هر دو قالب ASCII و MT برای **همهٔ** ردیف‌ها `volume = 0`
+  دارند (روی ۳۷۳٬۰۵۷ ردیف سال ۲۰۲۰ بررسی شد). بی‌فایده برای این استراتژی.
+- `Dukascopy` — قالب bi5 درست است ولی سرور با هم‌زمانی ۵۰۳ می‌دهد و دانلود ۷٬۳۰۵ فایل
+  از این محیط در ۱۵ دقیقه تمام نشد.
+- `getdata-finance/gbpusd-1m-ohlcv-forex-historical-data` — نسخهٔ رایگان فقط حدود ۶ ماه است.
+
+**بازتولید:**
+
+```bash
+python3 -m pip install pyarrow
+python3 tools/build_fx_dataset.py --symbol GBPUSD \
+  --from 2006-08-21 --to 2026-08-21 --anchor-to 2026-08-21 \
+  --cache /tmp/fxcache --out-dir datasets --ranges 1,2,3,10,20 \
+  --sample-out app/src/main/assets/sample_gbpusd_m1.csv --sample-bars 40000
+```
+
+خروجی gzip **قطعی** است (`mtime=0`): بازسازی برش ۲۰ساله در ۲۰۲۶-۱۰-۳۰ بایت‌به‌بایت همان
+SHA-256 جدول بالا را داد. آمار هر برش در `.meta.json` کنارش و خلاصهٔ همه در
+`datasets/fx_gbpusd_summary.json` نوشته می‌شود.
+
+### دریافت مستقیم (بدون اپ)
+
+```bash
+FX=https://github.com/alisport1384/ST3/releases/download/data-fx-v1
+curl -fLO $FX/goldpin_gbpusd_m1_1y.csv.gz
+curl -fLO $FX/goldpin_gbpusd_m1_2y.csv.gz
+curl -fLO $FX/goldpin_gbpusd_m1_3y.csv.gz
+curl -fLO $FX/goldpin_gbpusd_m1_10y.csv.gz
+curl -fLO $FX/goldpin_gbpusd_m1_20y.csv.gz
+```
+
 ## برای کار روی کد (تست‌ها و هارنس CLI)
 
 تست‌های `engine` و `app` و همچنین `cli/OptimizeKt` دیتاست را از پوشهٔ محلی `datasets/` می‌خوانند.
@@ -69,3 +126,13 @@ curl -fLO $BASE/goldpin_xauusd_m1_20y.csv.gz
 
 این پوشه در `.gitignore` است، پس چیزی به مخزن برنمی‌گردد. اگر فایل نباشد، تست‌های وابسته به
 داده با `assumeTrue` **skip** می‌شوند (build نمی‌شکند).
+
+### ساخت بازه‌های کوتاه‌تر از فایل ۲۰ساله
+
+می‌توان همان برش‌ها را از فایل ۲۰ساله بازساخت؛ خروجی با SHA-256 جدول بررسی می‌شود:
+
+```bash
+python3 tools/slice_fx_dataset.py /path/GBPUSD-20y-M1-volume.csv.gz 10 goldpin_gbpusd_m1_10y.csv.gz
+```
+
+بازهٔ خروجی می‌تواند ۱، ۲، ۳ یا ۱۰ سال باشد. سپس فایل فشرده را در بخش «وارد کردن فایل فشردهٔ داده از دستگاه» وارد کنید.

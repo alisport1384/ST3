@@ -38,7 +38,7 @@ object Storage {
      */
     private fun symTag(sym: String?): String {
         val spec = com.alisport.goldpin.core.Symbols.byId(sym)
-        return if (spec.oil) "_" + spec.id.lowercase() else ""
+        return if (spec.id == com.alisport.goldpin.core.Symbols.GOLD.id) "" else "_" + spec.id.lowercase()
     }
 
     fun autoFile(ctx: Context, sym: String? = null): File =
@@ -60,8 +60,9 @@ object Storage {
     fun dataFile(ctx: Context, years: Int = 1, sym: String? = null): File {
         require(years in supportedBacktestYears) { "بازهٔ داده پشتیبانی نمی‌شود: $years سال" }
         val spec = com.alisport.goldpin.core.Symbols.byId(sym)
-        val name = if (spec.oil) "goldpin_usoil_m1_${years}y.csv.gz"
-                   else if (years == 1) DATA_FILE_NAME else "goldpin_xauusd_m1_${years}y.csv.gz"
+        val name = if (spec.id != com.alisport.goldpin.core.Symbols.GOLD.id)
+            "goldpin_${spec.id.lowercase()}_m1_${years}y.csv.gz"
+        else if (years == 1) DATA_FILE_NAME else "goldpin_xauusd_m1_${years}y.csv.gz"
         return File(dir(ctx), name)
     }
 

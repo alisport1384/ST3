@@ -90,6 +90,9 @@ class MainActivity : Activity() {
     private val REQ_SAVE = 101
     private val REQ_LOAD = 102
     private val REQ_CSV = 103
+    private val REQ_DATASET = 107
+    private var pendingDatasetState: AppState? = null
+    private var pendingDatasetYears: Int = 1
     private val REQ_REPORT = 104
     private val REQ_LOG_MD = 105
     private val REQ_LOG_TXT = 106
@@ -571,7 +574,8 @@ class MainActivity : Activity() {
         val cv = ChartView(this)
         chart = cv
         cv.chartTfSec = s.chartTfSec
-        cv.symbolName = s.symbol
+        cv.priceDecimals = s.spec.decimals
+        cv.symbolName = if (s.spec.id == "GBPUSD" && s.liveRunning) "6B=F (فیوچرز پوند)" else s.symbol
         s.applyChartVis(cv)
         cv.onInfo = { txt -> chartInfo?.text = txt }
         cv.onGesture = { g -> Log.d(Log.CAT_UI, "ژست چارت: $g") }
@@ -827,7 +831,8 @@ class MainActivity : Activity() {
         cv.trades = snap.trades
         cv.pocPrice = snap.lastPocPx
         cv.livePulse = s.liveRunning
-        cv.symbolName = s.symbol
+        cv.symbolName = if (s.spec.id == "GBPUSD" && s.liveRunning) "6B=F (فیوچرز پوند)" else s.symbol
+        cv.priceDecimals = s.spec.decimals
         cv.chartTfSec = s.chartTfSec
         s.applyChartVis(cv)
         chartBottomPanel?.visibility = if (fullscreen || !s.showEventsPanel) View.GONE else View.VISIBLE
@@ -861,13 +866,13 @@ class MainActivity : Activity() {
             val pensList = snap.pendingOrders
             if (opensList.isNotEmpty()) {
                 for (t in opensList) {
-                    box.addView(Ui.tv(this, "پوزیشن #${t.id}: ${if (t.dir == 1) "خرید" else "فروش"} @ ${Fa.n(t.entry)} · سود/زیان ${Fa.signed(t.pnl())}",
+                    box.addView(Ui.tv(this, "پوزیشن #${t.id}: ${if (t.dir == 1) "خرید" else "فروش"} @ ${Fa.n(t.entry, s.spec.decimals)} · سود/زیان ${Fa.signed(t.pnl())}",
                         11f, Palette.gold))
                 }
             }
             if (pensList.isNotEmpty()) {
                 for (o in pensList) {
-                    box.addView(Ui.tv(this, "سفارش آماده #${o.id}: ${if (o.dir == 1) "خرید لیمیت" else "فروش لیمیت"} @ ${Fa.n(o.price)}",
+                    box.addView(Ui.tv(this, "سفارش آماده #${o.id}: ${if (o.dir == 1) "خرید لیمیت" else "فروش لیمیت"} @ ${Fa.n(o.price, s.spec.decimals)}",
                         11f, Palette.accent))
                 }
             }
@@ -927,9 +932,9 @@ class MainActivity : Activity() {
             OrderStatus.FILLED -> Palette.up
             else -> Palette.dim
         }
-        row.addView(Ui.tv(this, "#${Fa.d(o.id.toString())}  ${if (o.dir == 1) "خرید لیمیت" else "فروش لیمیت"}  @ ${Fa.n(o.price)}   [$st]",
+        row.addView(Ui.tv(this, "#${Fa.d(o.id.toString())}  ${if (o.dir == 1) "خرید لیمیت" else "فروش لیمیت"}  @ ${Fa.n(o.price, s.spec.decimals)}   [$st]",
             12.5f, col, true))
-        row.addView(Ui.tv(this, "حدضرر ${Fa.n(o.sl)} · TP1 ${Fa.n(o.tp1)} · TP2 ${Fa.n(o.tp2)} · TP ${Fa.n(o.tpX)} · حجم ${Fa.n(o.qty, 3)}",
+        row.addView(Ui.tv(this, "حدضرر ${Fa.n(o.sl, s.spec.decimals)} · TP1 ${Fa.n(o.tp1, s.spec.decimals)} · TP2 ${Fa.n(o.tp2, s.spec.decimals)} · TP ${Fa.n(o.tpX, s.spec.decimals)} · حجم ${Fa.n(o.qty, 3)}",
             11f, Palette.dim))
         row.addView(Ui.tv(this, "ناحیه: ${Fa.n(o.zoneBot)} تا ${Fa.n(o.zoneTop)} · ثبت ${Fa.jalali(o.placedT)}" +
             (o.filledT?.let { " · پر شد ${Fa.jalali(it)}" } ?: ""), 10.5f, Palette.dim))
@@ -945,9 +950,9 @@ class MainActivity : Activity() {
         val pnl = t.pnl()
         val col = if (t.open) Palette.accent else if (pnl >= 0) Palette.up else Palette.down
         row.addView(Ui.tv(this, "#${Fa.d(t.id.toString())}  ${if (t.dir == 1) "خرید" else "فروش"}  " +
-            "ورود ${Fa.n(t.entry)} → ${t.exitPx?.let { Fa.n(it) } ?: "باز"}   ${Fa.signed(pnl)} دلار (${Fa.n(t.rMultiple(), 2)}R)",
+            "ورود ${Fa.n(t.entry, s.spec.decimals)} → ${t.exitPx?.let { Fa.n(it, s.spec.decimals) } ?: "باز"}   ${Fa.signed(pnl)} دلار (${Fa.n(t.rMultiple(), 2)}R)",
             12.5f, col, true))
-        row.addView(Ui.tv(this, "حدضرر اولیه ${Fa.n(t.sl0)} · TP ${Fa.n(t.tpX)} · حجم ${Fa.n(t.qty, 3)}" +
+        row.addView(Ui.tv(this, "حدضرر اولیه ${Fa.n(t.sl0, s.spec.decimals)} · TP ${Fa.n(t.tpX, s.spec.decimals)} · حجم ${Fa.n(t.qty, 3)}" +
             (if (t.open) "" else " · دلیل: ${t.reason}"), 11f, Palette.dim))
         row.addView(Ui.tv(this, "ورود ${Fa.jalali(t.entryT)}" + (t.exitT?.let { " · خروج ${Fa.jalali(it)}" } ?: ""),
             10.5f, Palette.dim))
@@ -1105,7 +1110,7 @@ class MainActivity : Activity() {
         val cur = Hub.view
         v.addView(Ui.tv(this,
             "نماد نمای فعلی: " + cur.spec.label + " · " + cur.spec.unit + " · " +
-                "اسپرد/کارمزد " + Fa.n(cur.cfg.cmsnManual, 2) + " · " +
+                "اسپرد/کارمزد " + Fa.n(cur.cfg.cmsnManual, Brokers.costDecimals(cur.spec.id)) + " · " +
                 (if (cur.liveRunning) "● زنده" else "○ لایو خاموش") +
                 "\nهر دو نماد هم‌زمان معامله می‌کنند؛ انتخاب این گزینه فقط چارت/تنظیمات/گزارش‌ها را عوض می‌کند.",
             10.5f, Palette.dim).apply { setPadding(0, Ui.dp(this@MainActivity, 4f), 0, Ui.dp(this@MainActivity, 6f)) })
@@ -1333,8 +1338,8 @@ class MainActivity : Activity() {
             val atrNow = s.engine.structureAtr(s.cfg.slAtrPeriod)
             if (atrNow.isFinite() && atrNow > 0.0) {
                 v.addView(Ui.tv(this,
-                    "ATR فعلی ساختار: ${Fa.n(atrNow, 2)} ⇒ بافر ${Fa.n(atrNow * s.cfg.slAtrMult, 2)} واحد" +
-                        (if (s.cfg.maxSlMode == 1) " · سقف N=${Fa.n(atrNow * s.cfg.maxSlAtrMult, 2)}" else ""),
+                    "ATR فعلی ساختار: ${Fa.n(atrNow, s.spec.decimals)} ⇒ بافر ${Fa.n(atrNow * s.cfg.slAtrMult, s.spec.decimals)} واحد" +
+                        (if (s.cfg.maxSlMode == 1) " · سقف N=${Fa.n(atrNow * s.cfg.maxSlAtrMult, s.spec.decimals)}" else ""),
                     10.5f, Palette.gold))
             }
         }
@@ -1661,30 +1666,35 @@ class MainActivity : Activity() {
             10f, Palette.dim))
         for (b in Brokers.ALL) {
             val sel = b.id == s.cfg.brokerId && s.cfg.brokerAppliedAt > 0L
-            val g = Brokers.costPerUnit(b, com.alisport.goldpin.core.Symbols.GOLD.id, Hub.state(com.alisport.goldpin.core.Symbols.GOLD).refPrice())
-            val o = Brokers.costPerUnit(b, com.alisport.goldpin.core.Symbols.OIL.id, Hub.state(com.alisport.goldpin.core.Symbols.OIL).refPrice())
-            val title = (if (sel) "✓ " else "") + b.labelFa +
-                " — طلا " + (g?.let { Fa.n(it, 3) } ?: "—") + " · نفت " + (o?.let { Fa.n(it, 4) } ?: "—")
+            // ⚠ این ردیف پیش‌تر طلا و نفت را دستی نوشته بود؛ با نماد سوم (پوند) باید
+            // از `Symbols.ALL` ساخته شود وگرنه هزینهٔ پوند در رابط نشان داده نمی‌شد.
+            // رقم اعشار هر نماد هم از خودِ بروکر می‌آید (`Brokers.costDecimals`) چون
+            // هزینهٔ پوند ۰٫۰۰۰۰۷ دلار است و با چهار رقم «۰٫۰۰۰۱» خوانده می‌شد.
+            val title = (if (sel) "✓ " else "") + b.labelFa + " — " +
+                com.alisport.goldpin.core.Symbols.ALL.joinToString(" · ") { sp ->
+                    val c = Brokers.costPerUnit(b, sp.id, Hub.state(sp).refPrice())
+                    sp.short + " " + (c?.let { Fa.n(it, Brokers.costDecimals(sp.id)) } ?: "—")
+                }
             v.addView(Ui.btn(this, title, if (sel) Palette.accent else Palette.panel2,
                 if (sel) Palette.bg else Palette.txt, 11f).apply {
                 setOnClickListener {
-                    val gp = Hub.state(com.alisport.goldpin.core.Symbols.GOLD).refPrice()
-                    val op = Hub.state(com.alisport.goldpin.core.Symbols.OIL).refPrice()
                     val msg = buildString {
                         appendLine(b.noteFa)
                         appendLine()
-                        appendLine("• " + Brokers.summaryFa(b, com.alisport.goldpin.core.Symbols.GOLD.id, gp))
-                        appendLine("• " + Brokers.summaryFa(b, com.alisport.goldpin.core.Symbols.OIL.id, op))
+                        com.alisport.goldpin.core.Symbols.ALL.forEach { sp ->
+                            appendLine("• " + Brokers.summaryFa(b, sp.id, Hub.state(sp).refPrice()))
+                        }
                         appendLine()
-                        appendLine(Brokers.swapWarningFa(b, com.alisport.goldpin.core.Symbols.GOLD.id))
-                        appendLine(Brokers.swapWarningFa(b, com.alisport.goldpin.core.Symbols.OIL.id))
+                        com.alisport.goldpin.core.Symbols.ALL.forEach { sp ->
+                            Brokers.swapWarningFa(b, sp.id).takeIf { it.isNotEmpty() }?.let { appendLine(it) }
+                        }
                         appendLine()
                         append("دادهٔ رسمی بروکر: ${b.dataDate} · منبع: صفحهٔ Contract Specifications آلپاری")
                     }
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle(b.labelFa)
                         .setMessage(msg)
-                        .setPositiveButton("ست کن روی هر دو نماد") { _, _ ->
+                        .setPositiveButton("ست کن روی همهٔ نمادها") { _, _ ->
                             toast(Hub.applyBroker(b.id))
                             if (s.sessionMode == SessionMode.INTERNAL) showTab(5)
                         }
@@ -1719,21 +1729,21 @@ class MainActivity : Activity() {
         v.addView(Ui.tv(this,
             "الان: ${Strategy.label(c.strategy)} · مود مالی ${MoneyMode.label(c.mmMode)} · " +
                 (if (c.trigger2Fade) "تریگر ۲ معکوس روشن" else "تریگر ۲ معکوس خاموش (سند ۵)") +
-                " · هدف R=${Fa.n(c.trigger2TargetR, 1)} · کارمزد ${Fa.n(cmsn, 2)}",
+                " · هدف R=${Fa.n(c.trigger2TargetR, 1)} · کارمزد ${Fa.n(cmsn, Brokers.costDecimals(s.spec.id))}",
             11f, Palette.gold, true))
         v.addView(Ui.tv(this,
-            "حداقل فاصلهٔ حد ضرر ${Fa.n(c.minSlUnits, 2)} · سقف N=${Fa.n(c.maxSlUnits, 2)} · " +
+            "حداقل فاصلهٔ حد ضرر ${Fa.n(c.minSlUnits, s.spec.decimals)} · سقف N=${Fa.n(c.maxSlUnits, s.spec.decimals)} · " +
                 "ضریب فیلتر کارمزد ${Fa.n(c.minSlCostMult, 2)}" +
                 (if (med.isNaN()) "" else " · میانهٔ فاصلهٔ حد ضرر در آخرین اجرا ${Fa.n(med, 2)}"),
             10.5f, Palette.dim))
         if (cmsn > 0.0 && c.minSlCostMult * cmsn > c.maxSlUnits) {
             v.addView(Ui.tv(this,
-                "⚠ ناسازگار: آستانهٔ فیلتر کارمزد (${Fa.n(c.minSlCostMult * cmsn, 2)}) از سقف N " +
-                    "(${Fa.n(c.maxSlUnits, 2)}) بزرگ‌تر است ⇒ هیچ سفارشی ثبت نمی‌شود. دکمهٔ تطبیق را بزنید.",
+                "⚠ ناسازگار: آستانهٔ فیلتر کارمزد (${Fa.n(c.minSlCostMult * cmsn, s.spec.decimals)}) از سقف N " +
+                    "(${Fa.n(c.maxSlUnits, s.spec.decimals)}) بزرگ‌تر است ⇒ هیچ سفارشی ثبت نمی‌شود. دکمهٔ تطبیق را بزنید.",
                 10.5f, Palette.down, true))
         }
         v.addView(Ui.btn(this,
-            "تطبیق با کارمزد واردشده (پیشنهاد حداقل حد ضرر: ${Fa.n(s.suggestedMinSlUnits(), 2)})",
+            "تطبیق با کارمزد واردشده (پیشنهاد حداقل حد ضرر: ${Fa.n(s.suggestedMinSlUnits(), s.spec.decimals)})",
             Palette.accent, Palette.bg, 11.5f).apply {
             setOnClickListener {
                 val msg = s.adaptToCommission()
@@ -1742,14 +1752,27 @@ class MainActivity : Activity() {
             }
         })
         v.addView(Ui.tv(this,
-            "پیش‌تنظیم‌های آزموده‌شده روی دادهٔ یک‌سالهٔ بک‌تست (کارمزد مرجع ${Fa.n(s.adaptCmsn, 2)}):",
+            if (s.spec.id == "GBPUSD") "پیش‌تنظیم‌های طلا با مقیاس پوند؛ اعداد و ستاره‌های گزارشِ طلا لزوماً برای GBPUSD معتبر نیستند."
+            else "پیش‌تنظیم‌های طلا (کارمزد مرجع ${Fa.n(s.adaptCmsn, 2)}):",
             10.5f, Palette.dim))
-        for (p in s.adaptPresets) {
-            v.addView(Ui.btn(this, p.label, Palette.panel2, Palette.txt, 11f).apply {
+        if (s.spec.id == "GBPUSD") {
+            v.addView(Ui.btn(this, "★ بهترینِ ترکیب‌های آزموده‌شده — خارج از نمونه زیان‌ده", Palette.panel2, Palette.txt, 11f).apply {
                 setOnClickListener {
                     AlertDialog.Builder(this@MainActivity)
-                        .setTitle(p.label)
-                        .setMessage(p.note + "\n\nکارمزد ${Fa.n(p.cmsn, 2)} · هدف R=${Fa.n(p.targetR, 1)}" +
+                        .setTitle("تنظیم پژوهشی GBPUSD")
+                        .setMessage("۷۰٪ ابتدایی: ۱۸۸۸ معامله، PF ۱٫۰۸۴. ۳۰٪ انتهایی: ۷۶۹ معامله، PF ۰٫۸۲۵ و خالص حدود ۲۹٬۵۶۱−. این تنظیم در دادهٔ کنارگذاشته‌شده سودده نبوده و برای معاملهٔ واقعی توصیه نمی‌شود.")
+                        .setPositiveButton("اعمال برای آزمایش") { _, _ -> toast(s.applyFxResearchCandidate()); showTab(5) }
+                        .setNegativeButton("انصراف", null).show()
+                }
+            })
+        }
+        for (p in s.adaptPresets) {
+            val shownLabel = if (s.spec.id == "GBPUSD") "طلا (مقیاس‌شده) · " + p.label.replace("★", "").trim() else p.label
+            v.addView(Ui.btn(this, shownLabel, Palette.panel2, Palette.txt, 11f).apply {
+                setOnClickListener {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle(shownLabel)
+                        .setMessage((if (s.spec.id == "GBPUSD") "⚠ اعداد این گزارش مربوط به طلا هستند، نه GBPUSD.\n\n" else "") + p.note + "\n\nکارمزد ${Fa.n(p.cmsn, 2)} · هدف R=${Fa.n(p.targetR, 1)}" +
                             (if (p.strategy == Strategy.NO_TREND) " · حد سود ${Fa.n(p.tpUnits, 1)} واحد" else "") +
                             " · حداقل حد ضرر ${Fa.n(p.minSl, 2)} · سقف N=${Fa.n(p.maxSl, 2)}" +
                             (if (s.sessionMode == SessionMode.INTERNAL)
@@ -1792,12 +1815,12 @@ class MainActivity : Activity() {
                 " · کارمزد مؤثر: ${Fa.n(s.effectiveCmsn(), 2)}",
             10.5f, Palette.txt))
         v.addView(numRow("بازهٔ بهینه‌سازی: چند ماه آخر داده", s.optimizeMonths.toDouble()) {
-            s.optimizeMonths = it.toInt().coerceIn(1, 60)
+            s.optimizeMonths = it.toInt().coerceIn(1, 240)
         })
         val months = s.optimizeMonths
         val estCandles = src.size.toLong() * months / 12
         v.addView(Ui.tv(this,
-            "برآورد: حدود ${Fa.d(estCandles.toString())} کندل · ۱۳ تا ۱۵ بک‌تست کامل · " +
+            "برآورد: حدود ${Fa.d(estCandles.toString())} کندل · تا ۲۴ بک‌تست کامل · " +
                 "روی گوشی معمولاً چند دقیقه (در نشست بک‌تست داخلی، سریع‌تر چون داده در حافظه است).",
             10f, Palette.dim))
 
@@ -1839,6 +1862,7 @@ class MainActivity : Activity() {
             val oosBase = rep.oosBase
             if (oos != null) {
                 val verdict = when {
+                    oos.netCost < 0 -> "زیان‌ده خارج از نمونه ⚠؛ سوددهی تأیید نشد"
                     oosBase != null && oos.avgRCost > oosBase.avgRCost + 0.005 -> "بهتر از تنظیم فعلی ✅"
                     oosBase != null && oos.avgRCost < oosBase.avgRCost - 0.005 -> "بدتر از تنظیم فعلی ⚠ (برازش بیش‌ازحد)"
                     else -> "تقریباً برابر با تنظیم فعلی"
@@ -1904,7 +1928,7 @@ class MainActivity : Activity() {
                               else "زنده — فید شبکه و ذخیرهٔ خودکار"),
             11.5f, Palette.gold, true))
 
-        v.addView(Ui.tv(this, "بازهٔ بک‌تست طلا (M1):", 10.5f, Palette.dim, true))
+        v.addView(Ui.tv(this, "بازهٔ بک‌تست ${s.spec.short} (M1):", 10.5f, Palette.dim, true))
         val choices = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         for (y in listOf(1, 2, 3, 10, 20)) {
             val ready = s.hasBacktestData(this, y)
@@ -1945,9 +1969,10 @@ class MainActivity : Activity() {
             setOnClickListener {
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle("دانلود دادهٔ بک‌تست")
-                    .setMessage("دادهٔ ${Fa.d(years.toString())} سالهٔ M1 با ${Fa.d(spec.bars.toString())} کندل (حدود ${Fa.n(spec.bytesGz / 1048576.0, 1)} مگابایت فشرده) از مخزن ST دانلود می‌شود. فایل داخل APK نیست.\n" +
+                    .setMessage("دادهٔ ${Fa.d(years.toString())} سالهٔ M1 با ${Fa.d(spec.bars.toString())} کندل (حدود ${Fa.n(spec.bytesGz / 1048576.0, 1)} مگابایت فشرده). " +
+                        "داده از بخش Release دریافت می‌شود؛ همچنین می‌توانید فایل را وارد کنید.\n" +
                         (when {
-                            years >= 20 -> "اجرای ۲۰ساله روی حدود ۶٫۶ میلیون کندل ممکن است ده‌ها دقیقه طول بکشد و حافظهٔ زیادی بخواهد؛ روی بعضی گوشی‌های کم‌حافظه ممکن است کامل نشود.\n"
+                            years >= 20 -> "اجرای ۲۰ساله روی چند میلیون کندل ممکن است ده‌ها دقیقه طول بکشد و حافظهٔ زیادی بخواهد؛ روی بعضی گوشی‌های کم‌حافظه ممکن است کامل نشود.\n"
                             years >= 10 -> "اجرای بک‌تست این بازه به‌دلیل چند میلیون کندل ممکن است چندین دقیقه طول بکشد.\n"
                             else -> ""
                         }) +
@@ -1978,6 +2003,16 @@ class MainActivity : Activity() {
             })
         }
         v.addView(row)
+        v.addView(Ui.btn(this, "وارد کردن فایل فشردهٔ داده از دستگاه", Palette.panel2, Palette.txt, 11f).apply {
+            setOnClickListener {
+                pendingDatasetState = s
+                pendingDatasetYears = years
+                @Suppress("DEPRECATION")
+                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"
+                }, REQ_DATASET)
+            }
+        })
 
         if (internal) {
             if (s.backtestStale || years != s.activeBacktestYears) {
@@ -2249,7 +2284,8 @@ class MainActivity : Activity() {
 
     private fun numRow(label: String, value: Double, apply: (Double) -> Unit): View {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        val e = Ui.edit(this, if (value == value.toLong().toDouble()) value.toLong().toString() else value.toString())
+        val text = if (value.isFinite()) java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString() else value.toString()
+        val e = Ui.edit(this, text)
         row.addView(Ui.tv(this, label, 11.5f, Palette.dim), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.7f))
         row.addView(e, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         row.addView(Ui.btn(this, "ثبت", Palette.panel2, Palette.accent, 11f).apply {
@@ -2319,20 +2355,20 @@ class MainActivity : Activity() {
         add("جهت", if (t.dir == 1) "خرید (Long)" else "فروش (Short)")
         add("وضعیت", if (t.open) "باز" else "بسته — ${t.reason}")
         add("زمان ورود", Fa.jalali(t.entryT))
-        add("قیمت ورود", Fa.n(t.entry))
+        add("قیمت ورود", Fa.n(t.entry, s.spec.decimals))
         add("حجم", "${Fa.n(t.qty, 3)} اونس")
-        add("حد ضرر اولیه", Fa.n(t.sl0))
+        add("حد ضرر اولیه", Fa.n(t.sl0, s.spec.decimals))
         // §18-33 سند (ویرایش جدید): در «همهٔ» مودها TP1 و TP2 و TPX باید با **عدد و نتیجه** نشان داده شوند.
         fun tpResult(kind: String): String {
             val f = t.fills.firstOrNull { it.kind == kind }
-            return if (f != null) "✔ لمس شد — ${Fa.n(f.qty, 2)} @ ${Fa.n(f.price)} · ${Fa.signed(f.pnl)} دلار"
+            return if (f != null) "✔ لمس شد — ${Fa.n(f.qty, 2)} @ ${Fa.n(f.price, s.spec.decimals)} · ${Fa.signed(f.pnl)} دلار"
                    else "— لمس نشد"
         }
         add("TP1 (۰٫۳۸۲ فیبو) · ${Fa.n(t.tp1)}", tpResult("TP1"),
             if (t.fills.any { it.kind == "TP1" }) Palette.up else Palette.dim)
         add("TP2 (۰٫۵ فیبو) · ${Fa.n(t.tp2)}", tpResult("TP2"),
             if (t.fills.any { it.kind == "TP2" }) Palette.up else Palette.dim)
-        add("TPX (۱٫۲۷۲ فیبو) · ${Fa.n(t.tpX)}", tpResult("TPX"),
+        add("TPX (۱٫۲۷۲ فیبو) · ${Fa.n(t.tpX, s.spec.decimals)}", tpResult("TPX"),
             if (t.fills.any { it.kind == "TPX" }) Palette.up else Palette.dim)
         add("ناحیهٔ ساختار", "${Fa.n(t.zoneBot)} تا ${Fa.n(t.zoneTop)}")
         if (!t.open) {
@@ -2350,7 +2386,7 @@ class MainActivity : Activity() {
         box.addView(Ui.spacer(this, 6f))
         box.addView(Ui.tv(this, "پله‌های اجرا", 12f, Palette.gold, true))
         for (f in t.fills) {
-            box.addView(Ui.tv(this, "• ${f.kind}  ${Fa.n(f.qty, 3)} @ ${Fa.n(f.price)} · ${Fa.signed(f.pnl)} دلار · ${Fa.jalali(f.t)}",
+            box.addView(Ui.tv(this, "• ${f.kind}  ${Fa.n(f.qty, 3)} @ ${Fa.n(f.price, s.spec.decimals)} · ${Fa.signed(f.pnl)} دلار · ${Fa.jalali(f.t)}",
                 11f, if (f.pnl >= 0) Palette.txt else Palette.down))
         }
         AlertDialog.Builder(this).setTitle("جزئیات معامله").setView(box).setPositiveButton("بستن", null).show()
@@ -2371,9 +2407,9 @@ class MainActivity : Activity() {
             OrderStatus.CANCELLED_EXPIRED -> "منقضی شده"
             else -> "لغو شده" + (o.cancelReason?.let { " — $it" } ?: "")
         })
-        add("قیمت سفارش", Fa.n(o.price))
-        add("حد ضرر", Fa.n(o.sl))
-        add("TP1 / TP2 / TP نهایی", "${Fa.n(o.tp1)} / ${Fa.n(o.tp2)} / ${Fa.n(o.tpX)}")
+        add("قیمت سفارش", Fa.n(o.price, s.spec.decimals))
+        add("حد ضرر", Fa.n(o.sl, s.spec.decimals))
+        add("TP1 / TP2 / TP نهایی", "${Fa.n(o.tp1, s.spec.decimals)} / ${Fa.n(o.tp2, s.spec.decimals)} / ${Fa.n(o.tpX, s.spec.decimals)}")
         add("حجم", "${Fa.n(o.qty, 3)} اونس")
         if (o.mmNote.isNotEmpty()) add("محاسبهٔ حجم (§۲۰)", o.mmNote)
         add("ناحیهٔ ساختار", "${Fa.n(o.zoneBot)} تا ${Fa.n(o.zoneTop)}")
@@ -2469,6 +2505,13 @@ class MainActivity : Activity() {
                         } catch (e: Exception) { "خطای بازیابی: ${e.message}" }
                         runOnUiThread { toast(msg); showTab(0) }
                     }
+                }
+                REQ_DATASET -> {
+                    val st = pendingDatasetState
+                    if (st != null) st.importBacktestData(this, uri, pendingDatasetYears) { msg ->
+                        runOnUiThread { toast(msg); showTab(5) }
+                    }
+                    pendingDatasetState = null
                 }
                 REQ_CSV -> s.importCsv(this, uri, s.baseTfSec) { m -> toast(m); showTab(0) }
                 REQ_REPORT -> { Storage.writeReport(this, uri, pendingReport ?: tradesCsv()); toast("گزارش ذخیره شد") }

@@ -100,6 +100,8 @@ class ChartView @JvmOverloads constructor(
     var chartTfSec: Int = 60
     /** نام نماد برای لِجند */
     var symbolName: String = "GC=F"
+    /** تعداد اعشار ابزار؛ برای GBPUSD باید پنج رقم باشد. */
+    var priceDecimals: Int = 2
 
     // ── تنظیمات نمایش (کلی + جزئی به تفکیک هر جزء) ─────────────────────────────
     var showVolume = true
@@ -814,7 +816,7 @@ class ChartView @JvmOverloads constructor(
         if (hoverIdx >= 0) {
             val c = candles[hoverIdx]
             onInfo?.invoke(
-                "${Fa.jalali(c.t)}   O ${Fa.n(c.o)}   H ${Fa.n(c.h)}   L ${Fa.n(c.l)}   C ${Fa.n(c.c)}   V ${Fa.vol(c.v)}"
+                "${Fa.jalali(c.t)}   O ${Fa.n(c.o, priceDecimals)}   H ${Fa.n(c.h, priceDecimals)}   L ${Fa.n(c.l, priceDecimals)}   C ${Fa.n(c.c, priceDecimals)}   V ${Fa.vol(c.v)}"
             )
         }
     }
@@ -1021,7 +1023,9 @@ class ChartView @JvmOverloads constructor(
         }
     }
 
-    private fun fmtPrice(p: Double): String = when {
+    private fun fmtPrice(p: Double): String = if (priceDecimals >= 5) {
+        String.format(java.util.Locale.US, "%.5f", p)
+    } else when {
         p >= 1000 -> String.format("%,.2f", p)
         p >= 10 -> String.format("%.5f", p)
         else -> String.format("%.2f", p)
@@ -1076,7 +1080,7 @@ class ChartView @JvmOverloads constructor(
         canvas.drawText("$symbolName · ${com.alisport.goldpin.core.Tf.label(chartTfSec)}", x, y, pLegend)
         x += pLegend.measureText("$symbolName · ${com.alisport.goldpin.core.Tf.label(chartTfSec)}") + Ui.dp(context, 10f)
         pLegend.color = if (c.c >= c.o) upCol else dnCol
-        val parts = listOf("O ${Fa.n(c.o)}", "H ${Fa.n(c.h)}", "L ${Fa.n(c.l)}", "C ${Fa.n(c.c)}")
+        val parts = listOf("O ${Fa.n(c.o, priceDecimals)}", "H ${Fa.n(c.h, priceDecimals)}", "L ${Fa.n(c.l, priceDecimals)}", "C ${Fa.n(c.c, priceDecimals)}")
         for (s in parts) {
             canvas.drawText(s, x, y, pLegend)
             x += pLegend.measureText(s) + Ui.dp(context, 8f)

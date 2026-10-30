@@ -118,20 +118,22 @@ object Optimizer {
         var gross = 0.0
         var comm = 0.0
         var riskDollars = 0.0
+        var swap = 0.0
         var wins = 0
         val monthly = LinkedHashMap<String, Double>()
         val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
         for (t in closed) {
-            val c = commissionOf(cfg, t)
+            val c = t.commission
             gross += t.grossPnl()
             comm += c
+            swap += t.swap
             riskDollars += t.risk * t.qty * t.contractSize
-            if (t.grossPnl() - c > 0.0) wins++
+            if (t.grossPnl() - c + t.swap > 0.0) wins++
             cal.timeInMillis = t.exitT!!
             val key = "%04d-%02d".format(cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1)
-            monthly[key] = (monthly[key] ?: 0.0) + (t.grossPnl() - c)
+            monthly[key] = (monthly[key] ?: 0.0) + (t.grossPnl() - c + t.swap)
         }
-        val netCost = gross - comm
+        val netCost = gross - comm + swap
         val avgRCost = if (riskDollars > 0.0) netCost / riskDollars else 0.0
         var worst12 = 0.0
         val vals = monthly.values.toList()
@@ -185,7 +187,9 @@ object Optimizer {
         cancel: () -> Boolean = { false }
     ): Report {
         val t0 = System.currentTimeMillis()
-        val minTrades = minTradesFor(candles.size)
+        val split = if (candles.size > 20_000) (candles.size * 0.7).toInt() else candles.size
+        val training = candles.subList(0, split)
+        val minTrades = minTradesFor(training.size)
         val plans = ArrayList<Pair<String, (Settings) -> Unit>>()
         val baseBuf = base.slBufTicks
         val baseMaxSl = base.maxSlUnits
@@ -218,15 +222,27 @@ object Optimizer {
                 stage3.add("هدف ${k.toInt()}R" to { c: Settings -> c.trigger2TargetR = k })
             }
         } else {
-            for (tp in listOf(10.0, 25.0, 50.0)) {
-                stage3.add("حد سود ${tp.toInt()} واحد" to { c: Settings -> c.tpUnits = tp })
+            // ⚠ واحدِ «حد سود» هم‌واحد قیمتِ نماد است: ۱۰/۲۵/۵۰ دلار برای طلای ۴٬۰۰۰
+            // دلاری درست است ولی روی پوند ۱٫۳ دلاری یعنی ۷۷۰٪ قیمت. پس شبکه **نسبی به
+            // مقدار پایهٔ خودِ نماد** ساخته می‌شود؛ برای طلا دقیقاً همان ۱۰/۲۵/۵۰ قدیمی
+            // درمی‌آید چون `base.tpUnits` طلا ۱۰ است.
+            val tpBase = if (base.tpUnits > 0.0) base.tpUnits else 10.0
+            for (k in listOf(1.0, 2.5, 5.0)) {
+                val tp = Math.round(tpBase * k * 1e6) / 1e6
+                stage3.add("حد سود ${Fa2.n(tp, if (tp < 1.0) 5 else 0)} واحد" to { c: Settings -> c.tpUnits = tp })
             }
         }
         // ── مرحلهٔ ۵: گیت نوسان (ATR/قیمت) ────────────────────────────────────
         val stage5 = ArrayList<Pair<String, (Settings) -> Unit>>()
+        // ⚠ آستانهٔ ATR٪ هم به مقیاس نوسانِ خودِ نماد وابسته است (میانهٔ ATR٪ پوند
+        // ۰٫۱۱٪ است در برابر ۰٫۴۱٪ طلا). شبکه نسبت به مقدار پایه ساخته می‌شود؛ برای طلا
+        // عیناً همان ۰٫۲۰/۰٫۲۵ درمی‌آید چون `Tuned.MIN_ATR_PCT` = ۰٫۲۵ است.
+        val volBase = if (base.minAtrPct > 0.0) base.minAtrPct else Tuned.MIN_ATR_PCT
         stage5.add("گیت نوسان خاموش" to { c: Settings -> c.minAtrPct = 0.0 })
-        stage5.add("گیت نوسان ۰٫۲۰٪" to { c: Settings -> c.minAtrPct = 0.20 })
-        stage5.add("گیت نوسان ۰٫۲۵٪" to { c: Settings -> c.minAtrPct = 0.25 })
+        for (k in listOf(0.8, 1.0)) {
+            val g = Math.round(volBase * k * 1000.0) / 1000.0
+            stage5.add("گیت نوسان ${Fa2.n(g, 3)}٪" to { c: Settings -> c.minAtrPct = g })
+        }
         // ── مرحلهٔ ۴: نگهبان منحنی ─────────────────────────────────────────────
         val stage4 = ArrayList<Pair<String, (Settings) -> Unit>>()
         stage4.add("نگهبان خاموش" to { c: Settings -> c.guardMode = 0 })
@@ -241,21 +257,17 @@ object Optimizer {
         stage6.add("مدیریت کلاسیک سند" to { c: Settings ->
             c.mgmtMode = 0
         })
-        stage6.add("هوشمند · دروازه ۰٫۲۵٪" to { c: Settings ->
-            c.mgmtMode = 1; c.mgmtVolGatePct = 0.25
-            c.mgmtHoldMinR = Tuned.MGMT_HOLD_MIN_R; c.mgmtHoldMaxDays = Tuned.MGMT_HOLD_DAYS
-            c.mgmtTrailStartR = Tuned.MGMT_TRAIL_START_R; c.mgmtTrailDistR = Tuned.MGMT_TRAIL_DIST_R
-        })
-        stage6.add("هوشمند · دروازه ۰٫۳۰٪" to { c: Settings ->
-            c.mgmtMode = 1; c.mgmtVolGatePct = 0.30
-            c.mgmtHoldMinR = Tuned.MGMT_HOLD_MIN_R; c.mgmtHoldMaxDays = Tuned.MGMT_HOLD_DAYS
-            c.mgmtTrailStartR = Tuned.MGMT_TRAIL_START_R; c.mgmtTrailDistR = Tuned.MGMT_TRAIL_DIST_R
-        })
-        stage6.add("هوشمند · دروازه ۰٫۳۵٪" to { c: Settings ->
-            c.mgmtMode = 1; c.mgmtVolGatePct = 0.35
-            c.mgmtHoldMinR = Tuned.MGMT_HOLD_MIN_R; c.mgmtHoldMaxDays = Tuned.MGMT_HOLD_DAYS
-            c.mgmtTrailStartR = Tuned.MGMT_TRAIL_START_R; c.mgmtTrailDistR = Tuned.MGMT_TRAIL_DIST_R
-        })
+        // همان قاعدهٔ مرحلهٔ ۵: دروازهٔ نوسانِ مدیریت هم نسبت به پایهٔ نماد. برای طلا
+        // عیناً ۰٫۲۵/۰٫۳۰/۰٫۳۵ درمی‌آید چون `Tuned.MGMT_VOL_GATE_PCT` = ۰٫۳۰ است.
+        val baseGateMgmt = if (base.mgmtVolGatePct > 0.0) base.mgmtVolGatePct else volBase * 1.2
+        for (k in listOf(0.833, 1.0, 1.167)) {
+            val g = Math.round(baseGateMgmt * k * 1000.0) / 1000.0
+            stage6.add("هوشمند · دروازه ${Fa2.n(g, 3)}٪" to { c: Settings ->
+                c.mgmtMode = 1; c.mgmtVolGatePct = g
+                c.mgmtHoldMinR = Tuned.MGMT_HOLD_MIN_R; c.mgmtHoldMaxDays = Tuned.MGMT_HOLD_DAYS
+                c.mgmtTrailStartR = Tuned.MGMT_TRAIL_START_R; c.mgmtTrailDistR = Tuned.MGMT_TRAIL_DIST_R
+            })
+        }
         stage6.add("هوشمند · بدون تریلینگ" to { c: Settings ->
             c.mgmtMode = 1; c.mgmtVolGatePct = 0.0; c.mgmtTrailStartR = 0.0
         })
@@ -276,7 +288,7 @@ object Optimizer {
                 plan.second(c)
                 val label = "م${si + 1}· ${plan.first}"
                 progress?.invoke(evaluated, stages.sumOf { it.size }, label)
-                val r = evaluate(c, candles, label)
+                val r = evaluate(c, training, label)
                 evaluated++
                 rows.add(r)
                 if (r.score > bestScore) { bestScore = r.score; bestCfg = c; bestLabel = plan.first }
@@ -285,17 +297,20 @@ object Optimizer {
             if (bestCfg != null) current = bestCfg
             progress?.invoke(evaluated, stages.sumOf { it.size }, "برنده تا اینجا: $bestLabel")
         }
+        // گزارش و اعتبارسنجی باید دقیقاً همان ردیفی را استفاده کنند که بیشترین امتیاز
+        // آموزش را دارد، نه لزوماً آخرین برندهٔ مرحله‌ای را.
+        rows.maxByOrNull { it.score }?.let { current = it.cfg.copy() }
         // هدف R و حد سودِ «پایه» اگر در مرحلهٔ ۳ آزموده نشده باشد، به‌عنوان مرجع بماند
         if (baseTarget > 0 && base.strategy == Strategy.DOC) current.trigger2TargetR = current.trigger2TargetR
         if (base.strategy == Strategy.NO_TREND) current.tpUnits = current.tpUnits.coerceAtLeast(baseTp)
         // ── اعتبارسنجی خارج از نمونه ──────────────────────────────────────────
-        // برنده با کل بازه انتخاب شد؛ حالا همان برنده و تنظیمات پایهٔ کاربر فقط روی
-        // ۳۰٪ آخرِ داده (که در هیچ تصمیمی دخالت نداشته) اجرا می‌شوند تا معلوم شود
+        // انتخاب فقط روی ۷۰٪ ابتدایی است؛ ۳۰٪ آخر کنار گذاشته شده و در انتخاب
+        // هیچ دخالتی ندارد. برنده و پایه هر دو روی همان بازهٔ کنارگذاشته‌شده اجرا می‌شوند تا معلوم شود
         // بهبود واقعی است یا برازش بیش‌ازحد به گذشته.
         var oos: Row? = null
         var oosBase: Row? = null
         if (!cancelled && candles.size > 20_000) {
-            val cut = (candles.size * 0.7).toInt()
+            val cut = split
             val tail = candles.subList(cut, candles.size)
             progress?.invoke(evaluated, evaluated + 2, "اعتبارسنجی خارج از نمونه…")
             oos = evaluate(current.copy(), tail, "خارج از نمونه · برنده")

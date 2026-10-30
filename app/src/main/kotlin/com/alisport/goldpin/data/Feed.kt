@@ -427,18 +427,24 @@ object Feed {
         budgetMs: Long = connectTimeoutMs.toLong() + readTimeoutMs.toLong(),
         maxRounds: Int = 3
     ): Pair<Double?, String> {
-        if (!com.alisport.goldpin.core.Symbols.byId(symbolId).oil) return spotPrice(budgetMs, maxRounds)
+        val spec = com.alisport.goldpin.core.Symbols.byId(symbolId)
+        // طلا همان زنجیرهٔ تخصصی ۱٫۴٫۵۲ را دارد (gold-api → Swissquote → CoinGecko).
+        if (spec.kind == com.alisport.goldpin.core.SymbolKind.METAL) return spotPrice(budgetMs, maxRounds)
+        // برای GBPUSD چارتِ حجم‌دار از فیوچرز 6B=F می‌آید، نه اسپات.
+        // قیمت تزریق‌شده حتماً باید از همان قرارداد آتی باشد، نه GBPUSD=X؛
+        // ترکیب این دو کندل مصنوعی و پرشدن نادرست سفارش می‌سازد.
+        val px = feedSymbol
         val deadline = System.currentTimeMillis() + budgetMs
         var round = 0
         while (round < maxOf(1, maxRounds)) {
             round++
-            yahooLast(feedSymbol)?.let {
-                Log.d(Log.CAT_FEED, "قیمت لحظه‌ای نفت از Yahoo", com.alisport.goldpin.util.Fa.n(it, 3) + " (" + feedSymbol + ")")
-                return it to "Yahoo($feedSymbol)"
+            yahooLast(px)?.let {
+                Log.d(Log.CAT_FEED, "قیمت لحظه‌ای ${spec.short} از Yahoo", com.alisport.goldpin.util.Fa.n(it, 5) + " (" + px + ")")
+                return it to "Yahoo($px)"
             }
             if (System.currentTimeMillis() >= deadline) break
         }
-        Log.w(Log.CAT_FEED, "قیمت لحظه‌ای نفت به دست نیامد", "نماد=$feedSymbol دور=$round")
+        Log.w(Log.CAT_FEED, "قیمت لحظه‌ای ${spec.short} به دست نیامد", "نماد=$px دور=$round")
         return null to "ناموفق"
     }
 
@@ -685,9 +691,43 @@ object Feed {
             "$OIL_RELEASE_BASE/goldpin_usoil_m1_20y.csv.gz", "$OIL_RELEASE_MIRROR/goldpin_usoil_m1_20y.csv.gz")
     )
 
+    // ── دیتاست‌های پوند/دلار (GBPUSD) — M1 واقعی ۲۰۰۲ تا ۲۰۲۶ با حجم ────────────
+    //  منبع خام: مجموعهٔ عمومی `bunqi/OANDA_GBPUSD_GBPUSD` روی Hugging Face (کندل‌های
+    //  یک‌دقیقه‌ای OANDA). ستون حجم = **تعداد تیک در دقیقه** (tick volume)، عدد صحیح و
+    //  هیچ‌گاه صفر — همان خانوادهٔ واحدی که دیتاست‌های منتشرشدهٔ طلا دارند، پس بدون
+    //  هیچ ضریبی مستقیم مصرف می‌شود. (منبع‌های ردشده: HISTDATA حجمش برای همهٔ ردیف‌ها
+    //  صفر بود؛ Dukascopy از این محیط با ۵۰۳ و تایم‌اوت پاسخ می‌داد.)
+    //  بازه‌ها با **تفریق سال تقویمی** لنگر شده‌اند، دقیقاً مثل طلا: آخرین کندل همهٔ
+    //  فایل‌ها ۲۰۲۶-۰۸-۲۰T۲۳:۵۹Z است. SHAها از `datasets/fx_gbpusd_summary.json`
+    //  آمده‌اند و آزمون `RepositoryFxDatasetTest` همان‌ها را قفل می‌کند.
+    const val FX_RELEASE_TAG = "data-fx-v1"
+    const val FX_RELEASE_BASE = "https://github.com/alisport1384/ST3/releases/download/data-fx-v1"
+
+    val BACKTEST_DATASETS_FX = listOf(
+        BacktestDatasetSpec(1, 369_390, 4_044_650L,
+            "c66b3d01614f42508978c6061a9a29a6a452ff25f5aa868489075d94f28a3abd",
+            "$FX_RELEASE_BASE/goldpin_gbpusd_m1_1y.csv.gz"),
+        BacktestDatasetSpec(2, 738_328, 8_148_903L,
+            "547d84e1faf31bc5930460ac8c07f52f4b5c065b7e6107fc1ffe12dd7189b56e",
+            "$FX_RELEASE_BASE/goldpin_gbpusd_m1_2y.csv.gz"),
+        BacktestDatasetSpec(3, 1_107_619, 12_014_871L,
+            "d227be7d372e44fd1133b22fd9818cc8dcfae25f6f33e976aa615db2a9b89e31",
+            "$FX_RELEASE_BASE/goldpin_gbpusd_m1_3y.csv.gz"),
+        BacktestDatasetSpec(10, 3_580_052, 38_247_889L,
+            "081bb7af6e8dfe966ef4c17d03f9ddba4788d02914aa3e6daf698193b24394fe",
+            "$FX_RELEASE_BASE/goldpin_gbpusd_m1_10y.csv.gz"),
+        BacktestDatasetSpec(20, 7_101_926, 74_396_016L,
+            "fc1ccef3b080e00ea049624684d20cc5cbfb35d3f53942ce42a2fa52487aec2e",
+            "$FX_RELEASE_BASE/goldpin_gbpusd_m1_20y.csv.gz")
+    )
+
     /** مجموعهٔ دیتاستِ هر نماد — کلید چندنمادی‌شدن مسیر دانلود/بک‌تست. */
     fun datasetsFor(symbolId: String?): List<BacktestDatasetSpec> =
-        if (com.alisport.goldpin.core.Symbols.byId(symbolId).oil) BACKTEST_DATASETS_OIL else BACKTEST_DATASETS
+        when (com.alisport.goldpin.core.Symbols.byId(symbolId).kind) {
+            com.alisport.goldpin.core.SymbolKind.OIL -> BACKTEST_DATASETS_OIL
+            com.alisport.goldpin.core.SymbolKind.FX -> BACKTEST_DATASETS_FX
+            com.alisport.goldpin.core.SymbolKind.METAL -> BACKTEST_DATASETS
+        }
 
     fun backtestDataset(years: Int, symbolId: String? = null): BacktestDatasetSpec =
         datasetsFor(symbolId).firstOrNull { it.years == years }
@@ -948,14 +988,18 @@ object Feed {
     /**
      * دارایی نمونهٔ داخلی — **به تفکیک نماد**.
      * طلا: sample_xauusd_m1.csv · نفت: sample_usoil_m1.csv (هر دو ۴۰٬۰۰۰ کندل M1).
-     * اگر دارایی نماد درخواستی نبود، به نمونهٔ طلا برمی‌گردد تا اپ هرگز بی‌داده نماند.
+     * اگر دارایی پوند نبود خطا می‌دهد و هرگز دادهٔ طلا را جای پوند نشان نمی‌دهد.
      */
     fun openSampleAsset(ctx: android.content.Context, symbolId: String? = null): java.io.InputStream {
         val spec = com.alisport.goldpin.core.Symbols.byId(symbolId)
-        val names = if (spec.oil)
-            listOf("sample_usoil_m1.csv.gz", "sample_usoil_m1.csv", "sample_xauusd_m1.csv.gz", "sample_xauusd_m1.csv")
-        else
-            listOf("sample_xauusd_m1.csv.gz", "sample_xauusd_m1.csv")
+        // هر نماد اول دارایی خودش را امتحان می‌کند و در نهایت به نمونهٔ طلا برمی‌گردد
+        // تا اپ هرگز بی‌داده نماند. نام‌ها از `id` نماد ساخته می‌شوند تا نماد بعدی
+        // بدون دست‌زدن به این تابع کار کند.
+        val id = spec.id.lowercase()
+        val names = if (spec.kind == com.alisport.goldpin.core.SymbolKind.FX)
+            listOf("sample_${id}_m1.csv.gz", "sample_${id}_m1.csv")
+        else listOf("sample_${id}_m1.csv.gz", "sample_${id}_m1.csv",
+            "sample_xauusd_m1.csv.gz", "sample_xauusd_m1.csv")
         for (n in names) {
             try { return ctx.assets.open(n) } catch (e: Exception) { }
         }
